@@ -1,0 +1,9 @@
+# Keep line endings consistent so scripts run correctly on Linux CI runners.
+* text=auto
+
+# These are executed on GitHub's Ubuntu runners — must be LF, never CRLF.
+*.py    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.sh    text eol=lf
+.env.example text eol=lf

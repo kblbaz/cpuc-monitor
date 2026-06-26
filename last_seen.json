@@ -1,0 +1,18 @@
+{
+  "current_meeting": {
+    "date": "2026-07-16",
+    "agenda_number": "3584"
+  },
+  "agenda": {
+    "confirmed": false,
+    "pdf_url": null,
+    "detected_at": null,
+    "last_checked": null
+  },
+  "hold_list": {
+    "confirmed": false,
+    "pdf_url": null,
+    "detected_at": null,
+    "last_checked": null
+  }
+}

@@ -1,0 +1,162 @@
+I want to build a Python-based web scraping agent that monitors the 
+California Public Utilities Commission (CPUC) website for newly published 
+voting meeting documents and sends me email alerts via Yahoo Mail when 
+they appear. The agent will be deployed on PythonAnywhere (free tier) so 
+it runs 24/7 without needing my PC to be on.
+
+GOAL:
+Monitor two CPUC document pages per meeting cycle — the Current Meeting 
+Agenda and the Hold List — and send separate Yahoo Mail email alerts when 
+each is published.
+
+MONITORING TARGETS:
+
+1. CURRENT MEETING AGENDA
+   URL: https://docs.cpuc.ca.gov/SearchRes.aspx?DocTypeID=1
+         &DocTitleStart=Current%20Meeting%20Agenda&Latest=1
+   - Detect when a new meeting date appears in the document title
+   - Also verify by matching the expected agenda number
+   - Expected ~10 days before meeting date
+
+2. HOLD LIST
+   URL: https://docs.cpuc.ca.gov/SearchRes.aspx?DocTypeID=1
+         &DocTitleStart=Hold%20List&Latest=1
+   - Detect when a new Hold List appears for the current meeting date
+   - Only check AFTER agenda has been confirmed published
+   - Expected sometime within the 10 days before the meeting
+
+HOW THE PAGES WORK:
+- Both URLs stay constant — they are search queries that always 
+  return the latest matching document
+- Each returns one result with the meeting date and agenda number 
+  in the document title
+  e.g. "Current Meeting Agenda for July 16, 2026 (Agenda #3584)"
+- Each includes a direct PDF link and a published date
+- A change is detected when the meeting date or agenda number 
+  in the title matches the next expected meeting
+
+ALERT EMAILS:
+Send a separate Yahoo Mail email for each document:
+
+Email 1 — Agenda Alert:
+  Subject: "CPUC Voting Meeting Agenda Published — July 16, 2026 
+            (Agenda #3584)"
+  Body: Meeting date, agenda number, PDF link, 
+        date/time detected (Pacific time)
+
+Email 2 — Hold List Alert:
+  Subject: "CPUC Hold List Published — July 16, 2026 (Agenda #3584)"
+  Body: Meeting date, agenda number, PDF link, 
+        date/time detected (Pacific time)
+
+SMART CHECKING SCHEDULE:
+Use upcoming meeting dates in config.json to drive all logic.
+Two phases per meeting cycle:
+
+PHASE 1 — AGENDA MONITORING:
+- More than 12 days before meeting: do not check anything
+- 12 days before meeting: check agenda once per day
+- 10-11 days before meeting: check agenda every 3 hours
+- 8-9 days before meeting: check agenda every hour (safety net)
+- Once agenda detected and alert sent: mark confirmed in 
+  last_seen.json and begin Phase 2
+
+PHASE 2 — HOLD LIST MONITORING:
+- Begins automatically once agenda is confirmed published
+- Check Hold List every 3 hours
+- Increase to every hour within 3 days of meeting date
+- Once Hold List detected and alert sent: mark confirmed 
+  in last_seen.json
+- Stop all checking once meeting date has passed
+- Look to next meeting in config.json and reset cycle
+
+GENERAL RULES:
+- Never check Hold List before agenda is confirmed published
+- Never check anything more than 12 days before a meeting
+- All timestamps in Pacific time
+- Log every check with timestamp and result
+
+CREDENTIALS AND CONFIG:
+- Store Yahoo Mail address, App Password, and recipient email 
+  in .env file
+- Store meeting details in config.json
+- Never hardcode credentials in any script
+
+EMAIL SENDING CONFIGURATION:
+- SMTP server: smtp.mail.yahoo.com
+- Port: 587
+- Authentication: Yahoo Mail App Password
+
+CONFIG.JSON STRUCTURE:
+{
+  "meetings": [
+    {
+      "date": "2026-07-16",
+      "agenda_number": "3584"
+    },
+    {
+      "date": "2026-08-13",
+      "agenda_number": "3585"
+    },
+    {
+      "date": "2026-09-03",
+      "agenda_number": "3586"
+    }
+  ],
+  "alert_email": "",
+  "from_email": ""
+}
+
+LAST_SEEN.JSON STRUCTURE:
+{
+  "current_meeting": {
+    "date": "2026-07-16",
+    "agenda_number": "3584"
+  },
+  "agenda": {
+    "confirmed": false,
+    "pdf_url": null,
+    "detected_at": null
+  },
+  "hold_list": {
+    "confirmed": false,
+    "pdf_url": null,
+    "detected_at": null
+  }
+}
+
+TECHNICAL REQUIREMENTS:
+- Python 3
+- BeautifulSoup4 for scraping
+- requests library for fetching pages
+- smtplib for Yahoo Mail (built into Python)
+- python-dotenv for loading .env credentials
+- Compatible with PythonAnywhere free tier
+- All file paths relative, not absolute Windows paths
+
+PROJECT FILES TO CREATE:
+- CLAUDE.md — project context for future Claude sessions
+- README.md — full setup and deployment instructions
+- monitor.py — main scraper, logic, and alert script
+- config.json — meeting dates, agenda numbers, email preferences
+- last_seen.json — tracks confirmed status of each document
+- .env — credentials (never commit this)
+- .gitignore — excludes .env from version control
+- requirements.txt — all dependencies
+
+README.md MUST INCLUDE:
+- How to set up Yahoo Mail App Password
+- How to create PythonAnywhere free account
+- How to upload project files to PythonAnywhere
+- How to set up PythonAnywhere task scheduler
+- How to update meeting dates and agenda numbers in config.json
+- How to read the log file
+
+PLEASE:
+1. Fetch and examine both target URLs to understand page structure
+2. Propose a complete plan before writing any code
+3. Wait for my approval before proceeding
+4. Create CLAUDE.md first
+5. Build all project files step by step
+6. Walk me through Yahoo Mail App Password setup
+7. Walk me through PythonAnywhere deployment step by step
