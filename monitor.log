@@ -31,3 +31,6 @@
 [2026-06-30 01:46:48 PDT] More than 12 days before meeting — no checks performed.
 [2026-06-30 09:38:00 PDT] Run start: target meeting 2026-07-16 (Agenda #3584), 16 days out.
 [2026-06-30 09:38:00 PDT] More than 12 days before meeting — no checks performed.
+[2026-06-30 13:56:31 PDT] TEST_EMAIL set — sending a test email and exiting.
+[2026-06-30 13:56:32 PDT] Email: sent via Brevo to 1 recipient(s).
+[2026-06-30 13:56:32 PDT] Test email sent successfully.
