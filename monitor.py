@@ -560,7 +560,7 @@ def main() -> int:
                     "  - Date and time the monitor detected the new document "
                     "(Pacific Time)\n\n"
                     "This concludes this test of the CPUC Voting Meeting "
-                    "Monitor.\n\n"
+                    "Monitor.\n"
                     "This email will self-destruct in 5 seconds... 😊\n"
                 ),
                 config,
@@ -584,8 +584,10 @@ def main() -> int:
                     "identifies agenda items that were originally scheduled for "
                     "a vote but have been postponed to a future voting "
                     "meeting.</p>"
-                    "<p>Each Notification Includes:</p>"
-                    "<ul>"
+                    "<p style=\"margin-bottom:0\">Each Notification "
+                    "Includes:</p>"
+                    "<ul style=\"margin-top:0; padding-left:0; "
+                    "list-style-position:inside\">"
                     "<li>Voting meeting date and agenda number</li>"
                     "<li>Direct link to the official PDF document</li>"
                     "<li>CPUC publication date</li>"
@@ -593,8 +595,8 @@ def main() -> int:
                     "(Pacific Time)</li>"
                     "</ul>"
                     "<p>This concludes this test of the CPUC Voting Meeting "
-                    "Monitor.</p>"
-                    "<p>This email will self-destruct in 5 seconds... 😊</p>"
+                    "Monitor.<br>"
+                    "This email will self-destruct in 5 seconds... 😊</p>"
                 ),
             )
             log("Test email sent successfully.")
