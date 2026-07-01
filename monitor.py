@@ -299,7 +299,7 @@ def result_matches_target(result: dict, target: dict) -> bool:
 # --------------------------------------------------------------------------
 # Email
 # --------------------------------------------------------------------------
-def send_email(subject: str, body: str, config: dict) -> None:
+def send_email(subject: str, body: str, config: dict, html_body: str = None) -> None:
     """Send an alert through Brevo's HTTPS web API. Raises on failure.
 
     ALERT_EMAIL (or config["alert_email"]) may contain several recipients
@@ -328,6 +328,8 @@ def send_email(subject: str, body: str, config: dict) -> None:
         "subject": subject,
         "textContent": body,
     }
+    if html_body:
+        payload["htmlContent"] = html_body
     headers = {
         "api-key": api_key,
         "accept": "application/json",
@@ -536,32 +538,64 @@ def main() -> int:
                     "You've been added to the CPUC Voting Meeting Monitor. This "
                     "is a test email to confirm that notifications are being "
                     "delivered successfully. No action is required.\n\n"
-                    "What to Expect\n\n"
+                    "WHAT TO EXPECT\n\n"
                     "The CPUC Voting Meeting Monitor automatically monitors the "
                     "California Public Utilities Commission (CPUC) website and "
                     "sends notifications whenever new voting meeting documents "
-                    "are published.\n\n"
+                    "are published.\n"
                     "Prior to each voting meeting, you may receive up to two "
                     "notifications:\n\n"
-                    "Agenda Alert\n"
+                    "AGENDA ALERT\n"
                     "Sent when the Current Voting Meeting Agenda is published "
                     "(typically about 10 days before the meeting).\n\n"
-                    "Hold List Alert\n"
+                    "HOLD LIST ALERT\n"
                     "Sent when the Hold List is published. The Hold List "
                     "identifies agenda items that were originally scheduled for "
                     "a vote but have been postponed to a future voting "
                     "meeting.\n\n"
-                    "Each Notification Includes\n"
-                    "Voting meeting date and agenda number\n"
-                    "Direct link to the official PDF document\n"
-                    "CPUC publication date\n"
-                    "Date and time the monitor detected the new document "
+                    "Each Notification Includes:\n"
+                    "  - Voting meeting date and agenda number\n"
+                    "  - Direct link to the official PDF document\n"
+                    "  - CPUC publication date\n"
+                    "  - Date and time the monitor detected the new document "
                     "(Pacific Time)\n\n"
                     "This concludes this test of the CPUC Voting Meeting "
                     "Monitor.\n\n"
                     "This email will self-destruct in 5 seconds... 😊\n"
                 ),
                 config,
+                html_body=(
+                    "<p>Hello,</p>"
+                    "<p>You've been added to the CPUC Voting Meeting Monitor. "
+                    "This is a test email to confirm that notifications are "
+                    "being delivered successfully. No action is required.</p>"
+                    "<p><u>WHAT TO EXPECT</u></p>"
+                    "<p>The CPUC Voting Meeting Monitor automatically monitors "
+                    "the California Public Utilities Commission (CPUC) website "
+                    "and sends notifications whenever new voting meeting "
+                    "documents are published.<br>"
+                    "Prior to each voting meeting, you may receive up to two "
+                    "notifications:</p>"
+                    "<p><b>AGENDA ALERT</b><br>"
+                    "Sent when the Current Voting Meeting Agenda is published "
+                    "(typically about 10 days before the meeting).</p>"
+                    "<p><b>HOLD LIST ALERT</b><br>"
+                    "Sent when the Hold List is published. The Hold List "
+                    "identifies agenda items that were originally scheduled for "
+                    "a vote but have been postponed to a future voting "
+                    "meeting.</p>"
+                    "<p>Each Notification Includes:</p>"
+                    "<ul>"
+                    "<li>Voting meeting date and agenda number</li>"
+                    "<li>Direct link to the official PDF document</li>"
+                    "<li>CPUC publication date</li>"
+                    "<li>Date and time the monitor detected the new document "
+                    "(Pacific Time)</li>"
+                    "</ul>"
+                    "<p>This concludes this test of the CPUC Voting Meeting "
+                    "Monitor.</p>"
+                    "<p>This email will self-destruct in 5 seconds... 😊</p>"
+                ),
             )
             log("Test email sent successfully.")
             return 0
