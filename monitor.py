@@ -18,6 +18,7 @@ Design (see CLAUDE.md):
 from __future__ import annotations
 
 import hashlib
+import html
 import json
 import os
 import re
@@ -63,6 +64,8 @@ PROPOSED_DECISIONS_URL = (
     "https://docs.cpuc.ca.gov/SearchRes.aspx?ProposedDecisions=1&DaySearch=30"
 )
 PROCEEDING_ID = "A2507016"
+# Human-friendly label shown in parentheses wherever the proceeding id appears.
+PROCEEDING_LABEL = "Charter/Cox"
 # Alert when a list entry mentions the proceeding AND at least one of these.
 PROCEEDING_KEYWORDS = ("proposed decision", "alj")
 
@@ -498,9 +501,16 @@ def send_email(subject: str, body: str, config: dict, html_body: str = None) -> 
     log(f"Email: sent via Brevo to {len(recipients)} recipient(s).")
 
 
+def _pdf_html(pdf: str) -> str:
+    """Render a PDF value as an HTML anchor if it's a URL, else escaped text."""
+    if pdf.startswith("http"):
+        return f'<a href="{html.escape(pdf, quote=True)}">{html.escape(pdf)}</a>'
+    return html.escape(pdf)
+
+
 def build_email(kind: str, result: dict, target: dict, detected_at: datetime,
                 proceeding_on_agenda=None):
-    """Return (subject, body) for an Agenda or Hold List alert.
+    """Return (subject, text_body, html_body) for an Agenda or Hold List alert.
 
     For the Agenda alert, proceeding_on_agenda (True/False/None) is folded in so
     the same email reports whether proceeding A2507016 appears on the agenda.
@@ -515,65 +525,108 @@ def build_email(kind: str, result: dict, target: dict, detected_at: datetime,
     agenda_no = result.get("agenda_number") or target.get("agenda_number")
     pdf = result.get("pdf_url") or "(no direct PDF link found)"
     detected_str = detected_at.strftime("%Y-%m-%d %H:%M:%S %Z")
+    title = result.get("title", "")
+    published = result.get("published_date", "unknown")
 
     label = "Meeting Agenda" if kind == "agenda" else "Hold List"
     subject = f"CPUC {label} Published — {meeting_str} (Agenda #{agenda_no})"
+
     body = (
         f"A new CPUC {label} has been published.\n\n"
         f"Meeting date:   {meeting_str}\n"
         f"Agenda number:  #{agenda_no}\n"
-        f"Document title: {result.get('title', '')}\n"
-        f"Published date: {result.get('published_date', 'unknown')}\n"
+        f"Document title: {title}\n"
+        f"Published date: {published}\n"
         f"PDF link:       {pdf}\n"
         f"Detected at:    {detected_str} (Pacific time)\n"
     )
+    html_body = (
+        f"<p>A new CPUC {label} has been published.</p>"
+        f"<p>"
+        f"<b>Meeting date:</b> {html.escape(meeting_str)}<br>"
+        f"<b>Agenda number:</b> #{html.escape(str(agenda_no))}<br>"
+        f"<b>Document title:</b> {html.escape(title)}<br>"
+        f"<b>Published date:</b> {html.escape(str(published))}<br>"
+        f"<b>PDF link:</b> {_pdf_html(pdf)}<br>"
+        f"<b>Detected at:</b> {html.escape(detected_str)} (Pacific time)"
+        f"</p>"
+    )
 
     if kind == "agenda":
+        proc = f"{PROCEEDING_ID} ({PROCEEDING_LABEL})"
         if proceeding_on_agenda is True:
-            subject += f" — {PROCEEDING_ID} ON AGENDA"
+            subject += f" — {proc} ON AGENDA"
             body += (
-                f"\nProceeding {PROCEEDING_ID} (Charter/Cox merger): "
+                f"\nProceeding {proc}: "
                 f"YES — this proceeding appears on this agenda.\n"
             )
+            html_body += (
+                f"<p><b>Proceeding {proc}: "
+                f"YES — this proceeding appears on this agenda.</b></p>"
+            )
         elif proceeding_on_agenda is False:
-            body += (
-                f"\nProceeding {PROCEEDING_ID} (Charter/Cox merger): "
-                f"not found on this agenda.\n"
+            body += f"\nProceeding {proc}: not found on this agenda.\n"
+            html_body += (
+                f"<p><b>Proceeding {proc}:</b> not found on this agenda.</p>"
             )
         else:
             body += (
-                f"\nProceeding {PROCEEDING_ID} (Charter/Cox merger): "
+                f"\nProceeding {proc}: "
                 f"could not be determined (agenda PDF could not be read).\n"
+                f"I'm an AI agent, give me a break.\n"
+            )
+            html_body += (
+                f"<p><b>Proceeding {proc}:</b> "
+                f"could not be determined (agenda PDF could not be read).<br>"
+                f"<i>I'm an AI agent, give me a break.</i></p>"
             )
 
-    return subject, body
+    return subject, body, html_body
 
 
 def build_proceeding_email(matches: list, now: datetime):
-    """Return (subject, body) for the A2507016 Proposed Decision alert. One
-    email covers all newly-detected matching documents (usually just one)."""
+    """Return (subject, text_body, html_body) for the A2507016 Proposed Decision
+    alert. One email covers all newly-detected matching documents (usually one)."""
     detected_str = now.strftime("%Y-%m-%d %H:%M:%S %Z")
-    subject = f"CPUC ALERT — Proposed Decision in Proceeding {PROCEEDING_ID}"
+    proc = f"{PROCEEDING_ID} ({PROCEEDING_LABEL})"
+    subject = f"CPUC ALERT — Proposed Decision in Proceeding {proc}"
 
     parts = [
-        f"A Proposed Decision matching proceeding {PROCEEDING_ID} "
-        f"(Charter/Cox merger) has been posted to the CPUC Decisions and "
-        f"Resolutions for Public Comment list.\n",
+        f"A Proposed Decision matching proceeding {proc} has been posted to the "
+        f"CPUC Decisions and Resolutions for Public Comment list.\n",
     ]
+    doc_html = ""
     for i, m in enumerate(matches, 1):
         pdf = m.get("pdf_url") or "(no direct PDF link found)"
+        title = m.get("title", "")
+        posted = m.get("published_date", "unknown")
         heading = f"Document {i}:" if len(matches) > 1 else "Document:"
         parts.append(
             f"{heading}\n"
-            f"  Title:          {m.get('title', '')}\n"
-            f"  Date posted:    {m.get('published_date', 'unknown')}\n"
+            f"  Title:          {title}\n"
+            f"  Date posted:    {posted}\n"
             f"  PDF link:       {pdf}\n"
+        )
+        doc_html += (
+            f"<p><b>{heading}</b><br>"
+            f"<b>Title:</b> {html.escape(title)}<br>"
+            f"<b>Date posted:</b> {html.escape(str(posted))}<br>"
+            f"<b>PDF link:</b> {_pdf_html(pdf)}</p>"
         )
     parts.append(
         f"Detected at:    {detected_str} (Pacific time)\n"
         f"Source:         {PROPOSED_DECISIONS_URL}\n"
     )
-    return subject, "\n".join(parts)
+    text_body = "\n".join(parts)
+
+    html_body = (
+        f"<p>A Proposed Decision matching proceeding {html.escape(proc)} has been "
+        f"posted to the CPUC Decisions and Resolutions for Public Comment list.</p>"
+        f"{doc_html}"
+        f"<p><b>Detected at:</b> {html.escape(detected_str)} (Pacific time)<br>"
+        f"<b>Source:</b> {_pdf_html(PROPOSED_DECISIONS_URL)}</p>"
+    )
+    return subject, text_body, html_body
 
 
 # --------------------------------------------------------------------------
@@ -667,9 +720,11 @@ def run_phase_agenda(state, target, config, now, days_until) -> bool:
     else:
         log(f"Agenda: {PROCEEDING_ID} presence undetermined (PDF unreadable).")
 
-    subject, body = build_email("agenda", result, target, now, proceeding_on_agenda=on_agenda)
+    subject, body, html_body = build_email(
+        "agenda", result, target, now, proceeding_on_agenda=on_agenda
+    )
     try:
-        send_email(subject, body, config)
+        send_email(subject, body, config, html_body=html_body)
     except Exception as exc:
         log(f"Agenda: MATCH found but email failed: {exc!r}. Will retry next run.")
         return False
@@ -716,9 +771,9 @@ def run_phase_hold_list(state, target, config, now, days_until) -> None:
         )
         return
 
-    subject, body = build_email("hold_list", result, target, now)
+    subject, body, html_body = build_email("hold_list", result, target, now)
     try:
-        send_email(subject, body, config)
+        send_email(subject, body, config, html_body=html_body)
     except Exception as exc:
         log(f"Hold List: MATCH found but email failed: {exc!r}. Will retry next run.")
         return
@@ -769,9 +824,9 @@ def run_proceeding_watch(state, config, now) -> None:
             log(f"Proceeding {PROCEEDING_ID}: match(es) already alerted — nothing new.")
         return
 
-    subject, body = build_proceeding_email(new_matches, now)
+    subject, body, html_body = build_proceeding_email(new_matches, now)
     try:
-        send_email(subject, body, config)
+        send_email(subject, body, config, html_body=html_body)
     except Exception as exc:
         log(
             f"Proceeding {PROCEEDING_ID}: MATCH found but email failed: {exc!r}. "
