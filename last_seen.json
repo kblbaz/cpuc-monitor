@@ -14,5 +14,11 @@
     "pdf_url": null,
     "detected_at": null,
     "last_checked": null
+  },
+  "proceeding": {
+    "id": "A2507016",
+    "last_checked": null,
+    "detected_at": null,
+    "seen": []
   }
 }

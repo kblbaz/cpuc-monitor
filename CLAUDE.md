@@ -17,6 +17,12 @@ It watches **two documents per meeting cycle**:
 When each document is detected for the **target meeting**, a separate email
 alert is sent.
 
+It also watches **one standing target**, independent of the meeting cycle:
+
+3. **ALJ Proposed Decision on proceeding A2507016** (the Charter/Cox merger).
+   Checked every run against the CPUC Proposed Decisions list; a separate alert
+   is sent when it appears. See "Proceeding A2507016 watch" below.
+
 ## How it runs (IMPORTANT — read before changing anything)
 
 - **Host:** GitHub Actions (free, 24/7, no PC required).
@@ -63,9 +69,33 @@ the 5-minute peak zone spans the whole 8–15 day band to cover both.
 - Once the meeting date has passed → advance to the next meeting in
   `config.json` and reset `last_seen.json`.
 
+### Proceeding A2507016 watch (independent of the meeting cycle)
+- Runs on **every** invocation via `run_proceeding_watch()`, including when the
+  meeting cycle is idle (no upcoming meeting) or outside its checking window
+  (>20 days out). It is **not** gated by the meeting logic.
+- **Source:** the CPUC "Decisions and Resolutions for Public Comment" list
+  (`PROPOSED_DECISIONS_URL` — a `SearchRes.aspx?ProposedDecisions=1` page, same
+  page type as the agenda/hold-list searches). Chosen over the Daily Calendar,
+  whose URL 404'd and whose only machine-readable form is a PDF search.
+- **Cadence:** every 3 hours (`PROCEEDING_INTERVAL`). The source updates about
+  once per business day, so 3h catches a PD the same day without needless polls.
+- **Match rule:** a list row matches when its text contains the proceeding id
+  (`PROCEEDING_ID`, matched punctuation-insensitively so `A.25-07-016` ==
+  `A2507016`) **and** one of `PROCEEDING_KEYWORDS` ("proposed decision" / "alj").
+- **De-dup:** each alerted entry's signature (its PDF url, else a hash of the
+  row text) is stored in `proceeding.seen`; a repeat listing never re-alerts.
+- **Separate alert:** sends its own email (`build_proceeding_email()`) with the
+  document title, date posted, and direct PDF link — never merged with the
+  agenda/hold-list emails.
+- **State isolation:** lives under the `proceeding` key and is **preserved across
+  meeting resets** (captured in `main()` before `select_target_meeting()` may
+  replace the state dict, then re-attached). `reset_state_for()` deliberately
+  does not include it.
+
 ### Hard rules
 - Never check the Hold List before the agenda is confirmed.
-- Never check anything more than 20 days before a meeting.
+- Never check anything more than 20 days before a meeting (meeting cycle only —
+  the A2507016 watch runs regardless).
 - All timestamps in Pacific time.
 - Log every check with timestamp and result. `monitor.log` is auto-trimmed to
   the last `LOG_MAX_LINES` (5000) lines each run (`trim_log()`), since it is
@@ -80,6 +110,13 @@ document (the `Latest=1` parameter does this):
   `https://docs.cpuc.ca.gov/SearchRes.aspx?DocTypeID=1&DocTitleStart=Current%20Meeting%20Agenda&Latest=1`
 - **Hold List:**
   `https://docs.cpuc.ca.gov/SearchRes.aspx?DocTypeID=1&DocTitleStart=Hold%20List&Latest=1`
+
+The A2507016 watch uses a third URL — the Proposed Decisions list — which is the
+**same `SearchRes.aspx` page type**, but returns *many* rows (no `Latest=1`), so
+`fetch_proposed_decisions()` walks every row instead of taking just the first:
+
+- **Proposed Decisions:**
+  `https://docs.cpuc.ca.gov/SearchRes.aspx?ProposedDecisions=1&DaySearch=30`
 
 Each result row contains a document **title with the meeting date and agenda
 number**, a **direct PDF link**, and a **published date**.
@@ -147,13 +184,20 @@ so no personal emails live in the tree.
 Extends the original spec with `last_checked` timestamps so the 5-minute cron can
 enforce the per-phase cadences.
 
+The `proceeding` block is independent of the meeting cycle and is preserved when
+the meeting advances (`reset_state_for()` does not touch it).
+
 ```json
 {
   "current_meeting": { "date": "2026-07-16", "agenda_number": "3584" },
   "agenda":    { "confirmed": false, "pdf_url": null, "detected_at": null, "last_checked": null },
-  "hold_list": { "confirmed": false, "pdf_url": null, "detected_at": null, "last_checked": null }
+  "hold_list": { "confirmed": false, "pdf_url": null, "detected_at": null, "last_checked": null },
+  "proceeding": { "id": "A2507016", "last_checked": null, "detected_at": null, "seen": [] }
 }
 ```
+
+`proceeding.seen` accumulates signatures (PDF url or a row-text hash) of entries
+already alerted on, so the same Proposed Decision listing never re-alerts.
 
 ## Conventions
 

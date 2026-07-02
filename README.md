@@ -36,8 +36,12 @@ to be on.
 - When the Agenda for your target meeting appears, you get **email #1**. After
   that, it starts watching for the **Hold List** and sends **email #2** when it
   appears.
+- In the **same run**, it also watches for the **ALJ Proposed Decision on
+  proceeding A2507016** (the Charter/Cox merger) on the CPUC Proposed Decisions
+  list, and sends a **separate alert** if it appears. This check is independent
+  of the meeting cycle — it runs every time, even between meetings.
 - A GitHub Actions schedule runs the script **every 5 minutes**. The script itself
-  decides whether it's actually time to check (e.g. nothing happens until 12
+  decides whether it's actually time to check (e.g. nothing happens until 20
   days before a meeting), so it never wastes effort or spams the CPUC site.
 - Progress is saved in `last_seen.json` and `monitor.log`, which the workflow
   commits back to your repository after each run.
@@ -271,7 +275,18 @@ When the Hold List is found → send Hold List email, mark it confirmed. After t
 meeting date passes, the monitor moves on to the next meeting in `config.json`.
 
 The Hold List is **never** checked before the Agenda is confirmed, and **nothing**
-is checked more than 20 days before a meeting.
+in the meeting cycle is checked more than 20 days before a meeting.
+
+**A2507016 — ALJ Proposed Decision** (standing watch, independent of meetings)
+| When | Action |
+|---|---|
+| Every run | Check the CPUC Proposed Decisions list every 3 hours |
+
+Runs regardless of the meeting cycle (even between meetings). It scans the
+Proposed Decisions list for a row mentioning proceeding **A2507016** together
+with "Proposed Decision" or "ALJ". On a new match → send a **separate** alert
+with the document title, date posted, and direct PDF link. Each matching
+document alerts only once.
 
 ---
 

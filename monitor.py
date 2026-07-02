@@ -17,6 +17,7 @@ Design (see CLAUDE.md):
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -52,6 +53,19 @@ HOLD_LIST_URL = (
     "&DocTitleStart=Hold%20List&Latest=1"
 )
 
+# Additional, independent target: the ALJ Proposed Decision on proceeding
+# A2507016 (the Charter/Cox merger). Watched via the CPUC "Decisions and
+# Resolutions for Public Comment" list — the same SearchRes.aspx page type used
+# above, and the most reliable source (entries carry the proceeding number, ALJ
+# name, title, filed date, and a direct PDF link). This watch runs every
+# invocation on its own cadence, independent of the meeting cycle.
+PROPOSED_DECISIONS_URL = (
+    "https://docs.cpuc.ca.gov/SearchRes.aspx?ProposedDecisions=1&DaySearch=30"
+)
+PROCEEDING_ID = "A2507016"
+# Alert when a list entry mentions the proceeding AND at least one of these.
+PROCEEDING_KEYWORDS = ("proposed decision", "alj")
+
 # monitor.log is append-only and committed back to the repo every run, so cap it
 # to the most recent LOG_MAX_LINES lines to keep the repo from bloating over time.
 LOG_MAX_LINES = 5000
@@ -72,6 +86,12 @@ FIVE_MIN = timedelta(minutes=5)
 HOUR = timedelta(hours=1)
 THREE_HOURS = timedelta(hours=3)
 ONE_DAY = timedelta(hours=24)
+
+# The A2507016 Proposed Decision watch has no known target date (the PD could
+# post any business day), so it runs year-round at a fixed cadence. The source
+# updates ~once per business day, so every 3 hours catches it the same day
+# without needless polling.
+PROCEEDING_INTERVAL = THREE_HOURS
 
 
 # --------------------------------------------------------------------------
@@ -176,6 +196,19 @@ def save_state(state: dict) -> None:
 
 def fresh_doc_state() -> dict:
     return {"confirmed": False, "pdf_url": None, "detected_at": None, "last_checked": None}
+
+
+def fresh_proceeding_state() -> dict:
+    """State for the A2507016 Proposed Decision watch. Kept separate from the
+    meeting state (and preserved across meeting resets) so the two never
+    interfere. `seen` holds signatures of entries already alerted on, so a
+    repeated listing never triggers a duplicate alert."""
+    return {
+        "id": PROCEEDING_ID,
+        "last_checked": None,
+        "detected_at": None,
+        "seen": [],
+    }
 
 
 def reset_state_for(meeting: dict) -> dict:
@@ -316,6 +349,72 @@ def result_matches_target(result: dict, target: dict) -> bool:
     return False
 
 
+def fetch_proposed_decisions(url: str):
+    """Fetch the CPUC Proposed Decisions list and return ALL result rows.
+
+    Unlike fetch_latest() (which returns only the single newest row), this walks
+    every result row so we can scan the list for the target proceeding. Each item
+    is {title, row_text, pdf_url, published_date}; row_text is the full row so the
+    proceeding number and ALJ/Proposed Decision labels are all searchable.
+    """
+    import requests
+    from bs4 import BeautifulSoup
+
+    resp = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=REQUEST_TIMEOUT)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, "html.parser")
+
+    results = []
+    for title_cell in soup.find_all("td", class_="ResultTitleTD"):
+        row = title_cell.find_parent("tr")
+        title = title_cell.get_text(" ", strip=True)
+        row_text = row.get_text(" ", strip=True) if row else title
+
+        pdf_url = None
+        published_date = None
+        if row:
+            for anchor in row.find_all("a", href=True):
+                if anchor["href"].lower().endswith(".pdf"):
+                    pdf_url = urljoin(SITE_BASE, anchor["href"])
+                    break
+            date_cell = row.find("td", class_="ResultDateTD")
+            if date_cell:
+                published_date = date_cell.get_text(strip=True)
+
+        results.append(
+            {
+                "title": title,
+                "row_text": row_text,
+                "pdf_url": pdf_url,
+                "published_date": published_date,
+            }
+        )
+    return results
+
+
+def _normalize(text: str) -> str:
+    """Lowercase and strip all non-alphanumerics so proceeding numbers match
+    regardless of punctuation (e.g. 'A.25-07-016' -> 'a2507016')."""
+    return re.sub(r"[^a-z0-9]", "", text.lower())
+
+
+def proceeding_entry_matches(row_text: str) -> bool:
+    """True if a list row is for the target proceeding AND mentions a Proposed
+    Decision / ALJ (the combination the alert requires)."""
+    if PROCEEDING_ID.lower() not in _normalize(row_text):
+        return False
+    low = row_text.lower()
+    return any(keyword in low for keyword in PROCEEDING_KEYWORDS)
+
+
+def proceeding_signature(entry: dict) -> str:
+    """A stable identifier for a matched entry, used to avoid re-alerting. The
+    PDF link is unique per document; fall back to a hash of the row text."""
+    if entry.get("pdf_url"):
+        return entry["pdf_url"]
+    return "sig:" + hashlib.md5(_normalize(entry["row_text"]).encode("utf-8")).hexdigest()
+
+
 # --------------------------------------------------------------------------
 # Email
 # --------------------------------------------------------------------------
@@ -391,6 +490,33 @@ def build_email(kind: str, result: dict, target: dict, detected_at: datetime):
         f"Detected at:    {detected_str} (Pacific time)\n"
     )
     return subject, body
+
+
+def build_proceeding_email(matches: list, now: datetime):
+    """Return (subject, body) for the A2507016 Proposed Decision alert. One
+    email covers all newly-detected matching documents (usually just one)."""
+    detected_str = now.strftime("%Y-%m-%d %H:%M:%S %Z")
+    subject = f"CPUC ALERT — Proposed Decision in Proceeding {PROCEEDING_ID}"
+
+    parts = [
+        f"A Proposed Decision matching proceeding {PROCEEDING_ID} "
+        f"(Charter/Cox merger) has been posted to the CPUC Decisions and "
+        f"Resolutions for Public Comment list.\n",
+    ]
+    for i, m in enumerate(matches, 1):
+        pdf = m.get("pdf_url") or "(no direct PDF link found)"
+        heading = f"Document {i}:" if len(matches) > 1 else "Document:"
+        parts.append(
+            f"{heading}\n"
+            f"  Title:          {m.get('title', '')}\n"
+            f"  Date posted:    {m.get('published_date', 'unknown')}\n"
+            f"  PDF link:       {pdf}\n"
+        )
+    parts.append(
+        f"Detected at:    {detected_str} (Pacific time)\n"
+        f"Source:         {PROPOSED_DECISIONS_URL}\n"
+    )
+    return subject, "\n".join(parts)
 
 
 # --------------------------------------------------------------------------
@@ -537,6 +663,65 @@ def run_phase_hold_list(state, target, config, now, days_until) -> None:
     log(f"Hold List: CONFIRMED and alert sent. PDF: {result['pdf_url']}")
 
 
+def run_proceeding_watch(state, config, now) -> None:
+    """Independent target: watch the CPUC Proposed Decisions list for an ALJ
+    Proposed Decision on proceeding A2507016. Runs every invocation on its own
+    3-hour cadence, regardless of the meeting cycle, and sends its own separate
+    alert. Neither reads nor writes the agenda/hold_list state.
+    """
+    pstate = state.setdefault("proceeding", fresh_proceeding_state())
+    # Tolerate older/partial state files.
+    pstate.setdefault("id", PROCEEDING_ID)
+    pstate.setdefault("seen", [])
+
+    if not is_due(pstate.get("last_checked"), PROCEEDING_INTERVAL, now):
+        log(
+            f"Proceeding {PROCEEDING_ID}: not due yet (interval "
+            f"{PROCEEDING_INTERVAL}). Last checked {pstate.get('last_checked')}."
+        )
+        return
+
+    log(f"Proceeding {PROCEEDING_ID}: checking Proposed Decisions list.")
+    pstate["last_checked"] = now.isoformat()
+
+    try:
+        results = fetch_proposed_decisions(PROPOSED_DECISIONS_URL)
+    except Exception as exc:
+        log(f"Proceeding {PROCEEDING_ID}: fetch error: {exc!r}")
+        return
+
+    matches = [r for r in results if proceeding_entry_matches(r["row_text"])]
+    log(
+        f"Proceeding {PROCEEDING_ID}: {len(results)} PD list entries, "
+        f"{len(matches)} match the proceeding + keyword filter."
+    )
+
+    seen = pstate["seen"]
+    new_matches = [m for m in matches if proceeding_signature(m) not in seen]
+    if not new_matches:
+        if matches:
+            log(f"Proceeding {PROCEEDING_ID}: match(es) already alerted — nothing new.")
+        return
+
+    subject, body = build_proceeding_email(new_matches, now)
+    try:
+        send_email(subject, body, config)
+    except Exception as exc:
+        log(
+            f"Proceeding {PROCEEDING_ID}: MATCH found but email failed: {exc!r}. "
+            "Will retry next run."
+        )
+        return
+
+    for m in new_matches:
+        seen.append(proceeding_signature(m))
+    pstate["detected_at"] = now.isoformat()
+    log(
+        f"Proceeding {PROCEEDING_ID}: ALERT sent for {len(new_matches)} new "
+        f"document(s)."
+    )
+
+
 # --------------------------------------------------------------------------
 # Main
 # --------------------------------------------------------------------------
@@ -631,9 +816,22 @@ def main() -> int:
 
     state = load_json(STATE_PATH) if STATE_PATH.exists() else {}
 
+    # Preserve the proceeding watch's state across meeting resets:
+    # select_target_meeting() may replace `state` wholesale with a fresh
+    # meeting-only dict when the target meeting advances, which would otherwise
+    # drop this key. Capture it first, then re-attach below.
+    proceeding_state = state.get("proceeding") or fresh_proceeding_state()
+
     target, state = select_target_meeting(config, state, today)
+    state["proceeding"] = proceeding_state
+
+    # Independent target: the A2507016 ALJ Proposed Decision. Runs every
+    # invocation on its own cadence, even when the meeting cycle is idle or
+    # outside its checking window, and sends its own separate alert.
+    run_proceeding_watch(state, config, now)
+
     if target is None:
-        log("No upcoming meetings in config.json. Nothing to monitor.")
+        log("No upcoming meetings in config.json. Meeting cycle idle.")
         save_state(state)
         return 0
 
@@ -644,7 +842,7 @@ def main() -> int:
     )
 
     if days_until > 20:
-        log("More than 20 days before meeting — no checks performed.")
+        log("More than 20 days before meeting — no meeting checks performed.")
         save_state(state)
         return 0
 
