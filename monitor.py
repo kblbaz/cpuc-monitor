@@ -407,7 +407,9 @@ def classify_proceeding_entry(row_text: str):
     Returns:
       "alternate"          — an Alternate Proposed Decision (filed by a
                              Commissioner proposing a different outcome than the
-                             ALJ), detected by "alternate" + "proposed decision".
+                             ALJ), detected by "alternate" + "decision" (catches
+                             both "Alternate Proposed Decision" and "Alternate
+                             Decision" wordings).
       "proposed_decision"  — the ALJ's (original) Proposed Decision.
       None                 — not a match for this proceeding.
 
@@ -417,7 +419,7 @@ def classify_proceeding_entry(row_text: str):
     if PROCEEDING_ID.lower() not in _normalize(row_text):
         return None
     low = row_text.lower()
-    if "alternate" in low and "proposed decision" in low:
+    if "alternate" in low and "decision" in low:
         return "alternate"
     if any(keyword in low for keyword in PROCEEDING_KEYWORDS):
         return "proposed_decision"

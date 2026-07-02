@@ -92,9 +92,10 @@ the 5-minute peak zone spans the whole 8–15 day band to cover both.
 - **Match + classify:** a list row must contain the proceeding id
   (`PROCEEDING_ID`, matched punctuation-insensitively so `A.25-07-016` ==
   `A2507016`). `classify_proceeding_entry()` then labels it:
-  - `"alternate"` — row has "alternate" + "proposed decision" → an **Alternate
-    Proposed Decision** (filed by a Commissioner proposing a different outcome
-    than the ALJ, before the vote). Checked first, since an APD also contains the
+  - `"alternate"` — row has "alternate" + "decision" (catches both "Alternate
+    Proposed Decision" and "Alternate Decision") → an **Alternate Proposed
+    Decision** (filed by a Commissioner proposing a different outcome than the
+    ALJ, before the vote). Checked first, since an APD also contains the
     substring "proposed decision".
   - `"proposed_decision"` — row matches a `PROCEEDING_KEYWORDS` term
     ("proposed decision" / "alj") → the ALJ's original Proposed Decision.
