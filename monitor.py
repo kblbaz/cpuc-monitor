@@ -880,6 +880,29 @@ def main() -> int:
             log(f"Test email FAILED: {exc!r}")
             return 1
 
+    # On-demand agenda-PDF check (TEST_AGENDA_PDF=<url>). Reads the given agenda
+    # PDF, reports whether A2507016 appears (and lists the proceeding numbers it
+    # found, for eyeballing), then exits. Lets you dry-run the PDF parse against
+    # any agenda without waiting for a real detection. Sends no email.
+    test_pdf_url = os.getenv("TEST_AGENDA_PDF", "").strip()
+    if test_pdf_url:
+        log(f"TEST_AGENDA_PDF set — checking {test_pdf_url}")
+        try:
+            text = fetch_pdf_text(test_pdf_url)
+        except Exception as exc:
+            log(f"TEST_AGENDA_PDF: could not read PDF: {exc!r}")
+            return 1
+        found = PROCEEDING_ID.lower() in _normalize(text)
+        procs = sorted(set(re.findall(r"[ARIPC]\.\d{2}-\d{2}-\d{3}", text)))
+        log(
+            f"TEST_AGENDA_PDF: extracted {len(text)} chars; "
+            f"{len(procs)} proceeding number(s) found."
+        )
+        log(f"TEST_AGENDA_PDF: {PROCEEDING_ID} present = {found}")
+        if procs:
+            log("TEST_AGENDA_PDF: sample proceedings: " + ", ".join(procs[:20]))
+        return 0
+
     state = load_json(STATE_PATH) if STATE_PATH.exists() else {}
 
     # Preserve the proceeding watch's state across meeting resets:

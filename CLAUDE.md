@@ -170,6 +170,14 @@ a secondary confirmation, not a strict requirement.
   `textContent` and `htmlContent`. Only the `TEST_EMAIL` message uses this (for
   underline/bold/bulleted formatting) — the Agenda/Hold List alerts are plain text.
 
+### Debug / test toggles (env vars; each skips monitoring and exits)
+- `TEST_EMAIL=1` → send the subscriber test email and exit.
+- `TEST_AGENDA_PDF=<url>` → read that agenda PDF, log whether `A2507016` appears
+  (plus the proceeding numbers it found), and exit. Sends no email. Use it to
+  dry-run the PDF parse without waiting for a real agenda detection.
+- Both are wired as `workflow_dispatch` inputs in `monitor.yml`, so they can be
+  run from the Actions "Run workflow" form.
+
 ## config.json shape
 
 ```json

@@ -15,6 +15,10 @@ on:
         description: "Send a test email to confirm delivery works (skips monitoring)"
         type: boolean
         default: false
+      test_agenda_pdf:
+        description: "Debug: agenda PDF URL to check for A2507016 (skips monitoring)"
+        type: string
+        default: ""
 
 # Allow the job to push the updated state/log back to the repo.
 permissions:
@@ -47,6 +51,7 @@ jobs:
           YAHOO_EMAIL: ${{ secrets.YAHOO_EMAIL }}
           ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
           TEST_EMAIL: ${{ inputs.test_email }}
+          TEST_AGENDA_PDF: ${{ inputs.test_agenda_pdf }}
         run: python monitor.py
 
       - name: Commit updated state and log
