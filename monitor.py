@@ -958,6 +958,65 @@ def main() -> int:
             log("TEST_AGENDA_PDF: sample proceedings: " + ", ".join(procs[:20]))
         return 0
 
+    # On-demand sample alert (TEST_ALERT=agenda|agenda-notfound|
+    # agenda-undetermined|holdlist|proceeding). Builds a real alert email from
+    # sample data and sends it (subject prefixed "[TEST]"), then exits — so you
+    # can preview the actual formatting in your inbox without a real detection.
+    test_alert = os.getenv("TEST_ALERT", "").strip().lower()
+    if test_alert and test_alert != "none":
+        log(f"TEST_ALERT={test_alert} — sending a sample alert email and exiting.")
+        sample_target = {"date": "2026-07-16", "agenda_number": "3584"}
+        try:
+            if test_alert.startswith("agenda"):
+                on_agenda = {
+                    "agenda": True,
+                    "agenda-found": True,
+                    "agenda-notfound": False,
+                    "agenda-undetermined": None,
+                }.get(test_alert, True)
+                sample = {
+                    "title": "Current Meeting Agenda for July 16, 2026 (Agenda #3584)",
+                    "pdf_url": "https://docs.cpuc.ca.gov/PublishedDocs/Published/G000/M609/K934/609934454.PDF",
+                    "published_date": "07/06/2026",
+                    "meeting_date": parse_iso_date("2026-07-16"),
+                    "agenda_number": "3584",
+                }
+                subject, body, html_body = build_email(
+                    "agenda", sample, sample_target, now, proceeding_on_agenda=on_agenda
+                )
+            elif test_alert in ("holdlist", "hold_list", "hold-list"):
+                sample = {
+                    "title": "Hold List for July 16, 2026 (Agenda 3584) (Final)",
+                    "pdf_url": "https://docs.cpuc.ca.gov/PublishedDocs/Published/G000/M610/K111/610111222.PDF",
+                    "published_date": "07/13/2026",
+                    "meeting_date": parse_iso_date("2026-07-16"),
+                    "agenda_number": "3584",
+                }
+                subject, body, html_body = build_email(
+                    "hold_list", sample, sample_target, now
+                )
+            elif test_alert in ("proceeding", "pd", "proposed", "proposeddecision"):
+                sample_matches = [{
+                    "title": "Proposed Decision of ALJ (Charter Communications / Cox)",
+                    "pdf_url": "https://docs.cpuc.ca.gov/PublishedDocs/Published/G000/M620/K333/620333444.PDF",
+                    "published_date": now.strftime("%m/%d/%Y"),
+                    "row_text": "Proposed Decision ... Proceeding: A2507016",
+                }]
+                subject, body, html_body = build_proceeding_email(sample_matches, now)
+            else:
+                log(
+                    f"TEST_ALERT: unknown value '{test_alert}'. Use one of: "
+                    "agenda, agenda-notfound, agenda-undetermined, holdlist, proceeding."
+                )
+                return 1
+
+            send_email("[TEST] " + subject, body, config, html_body=html_body)
+            log("TEST_ALERT: sample alert sent successfully.")
+            return 0
+        except Exception as exc:
+            log(f"TEST_ALERT FAILED: {exc!r}")
+            return 1
+
     state = load_json(STATE_PATH) if STATE_PATH.exists() else {}
 
     # Preserve the proceeding watch's state across meeting resets:

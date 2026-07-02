@@ -19,6 +19,17 @@ on:
         description: "Debug: agenda PDF URL to check for A2507016 (skips monitoring)"
         type: string
         default: ""
+      test_alert:
+        description: "Debug: send a sample alert email (skips monitoring)"
+        type: choice
+        default: "none"
+        options:
+          - none
+          - agenda
+          - agenda-notfound
+          - agenda-undetermined
+          - holdlist
+          - proceeding
 
 # Allow the job to push the updated state/log back to the repo.
 permissions:
@@ -52,6 +63,7 @@ jobs:
           ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
           TEST_EMAIL: ${{ inputs.test_email }}
           TEST_AGENDA_PDF: ${{ inputs.test_agenda_pdf }}
+          TEST_ALERT: ${{ inputs.test_alert }}
         run: python monitor.py
 
       - name: Commit updated state and log
