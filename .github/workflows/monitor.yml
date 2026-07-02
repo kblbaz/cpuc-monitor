@@ -64,6 +64,10 @@ jobs:
           TEST_EMAIL: ${{ inputs.test_email }}
           TEST_AGENDA_PDF: ${{ inputs.test_agenda_pdf }}
           TEST_ALERT: ${{ inputs.test_alert }}
+          # Optional secret: if set, TEST_EMAIL/TEST_ALERT go only here (not to
+          # the real ALERT_EMAIL list). Kept as a secret so the address never
+          # appears in this public repo's run logs.
+          TEST_RECIPIENT: ${{ secrets.TEST_RECIPIENT }}
         run: python monitor.py
 
       - name: Commit updated state and log

@@ -183,8 +183,12 @@ a secondary confirmation, not a strict requirement.
   (subject prefixed `[TEST]`), then exit. Kinds: `agenda`, `agenda-notfound`,
   `agenda-undetermined`, `holdlist`, `proceeding`. Lets you preview the actual
   alert formatting in your inbox. Value `none`/empty is a no-op.
-- All are wired as `workflow_dispatch` inputs in `monitor.yml`, so they can be
-  run from the Actions "Run workflow" form.
+- `TEST_RECIPIENT=<email>` → optional override (a **secret**, not a workflow
+  input, so it stays out of the public repo's run logs). When set, `TEST_EMAIL`
+  and `TEST_ALERT` send **only** to this address via `send_email`'s
+  `recipients_override`; real alerts still go to the full `ALERT_EMAIL` list.
+- The toggles above are `workflow_dispatch` inputs in `monitor.yml`;
+  `TEST_RECIPIENT` is a repository Secret wired into the run's env.
 
 ## config.json shape
 

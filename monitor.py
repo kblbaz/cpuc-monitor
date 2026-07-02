@@ -454,18 +454,23 @@ def agenda_mentions_proceeding(pdf_url):
 # --------------------------------------------------------------------------
 # Email
 # --------------------------------------------------------------------------
-def send_email(subject: str, body: str, config: dict, html_body: str = None) -> None:
+def send_email(subject: str, body: str, config: dict, html_body: str = None,
+               recipients_override: str = None) -> None:
     """Send an alert through Brevo's HTTPS web API. Raises on failure.
 
     ALERT_EMAIL (or config["alert_email"]) may contain several recipients
     separated by commas; every address listed receives the alert. The sender
     must be a Brevo-verified address (YAHOO_EMAIL / config["from_email"]).
+
+    recipients_override (used by the TEST_* toggles via TEST_RECIPIENT) sends
+    only to the given comma-separated address(es) instead of ALERT_EMAIL, so a
+    preview never spams the real subscriber list.
     """
     import requests
 
     api_key = os.getenv("BREVO_API_KEY")
     from_email = os.getenv("YAHOO_EMAIL") or config.get("from_email")
-    raw_recipients = os.getenv("ALERT_EMAIL") or config.get("alert_email") or ""
+    raw_recipients = recipients_override or os.getenv("ALERT_EMAIL") or config.get("alert_email") or ""
     recipients = [addr.strip() for addr in raw_recipients.split(",") if addr.strip()]
 
     if not api_key or not from_email or not recipients:
@@ -856,6 +861,11 @@ def main() -> int:
         return 1
     config = load_json(CONFIG_PATH)
 
+    # Optional: restrict the TEST_* preview emails to a single address (kept in
+    # the TEST_RECIPIENT secret) so previewing never emails the real
+    # ALERT_EMAIL subscriber list. Empty -> falls back to ALERT_EMAIL.
+    test_to = os.getenv("TEST_RECIPIENT", "").strip() or None
+
     # On-demand email test (TEST_EMAIL=1). Sends one real email using the
     # configured credentials, then exits without touching the monitor logic.
     if os.getenv("TEST_EMAIL", "").strip().lower() in ("1", "true", "yes"):
@@ -928,6 +938,7 @@ def main() -> int:
                     "Monitor.<br>"
                     "This email will self-destruct in 5 seconds... 😊</p>"
                 ),
+                recipients_override=test_to,
             )
             log("Test email sent successfully.")
             return 0
@@ -1010,7 +1021,10 @@ def main() -> int:
                 )
                 return 1
 
-            send_email("[TEST] " + subject, body, config, html_body=html_body)
+            send_email(
+                "[TEST] " + subject, body, config,
+                html_body=html_body, recipients_override=test_to,
+            )
             log("TEST_ALERT: sample alert sent successfully.")
             return 0
         except Exception as exc:
