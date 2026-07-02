@@ -401,13 +401,33 @@ def _normalize(text: str) -> str:
     return re.sub(r"[^a-z0-9]", "", text.lower())
 
 
-def proceeding_entry_matches(row_text: str) -> bool:
-    """True if a list row is for the target proceeding AND mentions a Proposed
-    Decision / ALJ (the combination the alert requires)."""
+def classify_proceeding_entry(row_text: str):
+    """Classify a Proposed Decisions list row for proceeding A2507016.
+
+    Returns:
+      "alternate"          — an Alternate Proposed Decision (filed by a
+                             Commissioner proposing a different outcome than the
+                             ALJ), detected by "alternate" + "proposed decision".
+      "proposed_decision"  — the ALJ's (original) Proposed Decision.
+      None                 — not a match for this proceeding.
+
+    The alternate check is done first because an Alternate Proposed Decision also
+    contains the substring "proposed decision".
+    """
     if PROCEEDING_ID.lower() not in _normalize(row_text):
-        return False
+        return None
     low = row_text.lower()
-    return any(keyword in low for keyword in PROCEEDING_KEYWORDS)
+    if "alternate" in low and "proposed decision" in low:
+        return "alternate"
+    if any(keyword in low for keyword in PROCEEDING_KEYWORDS):
+        return "proposed_decision"
+    return None
+
+
+def proceeding_entry_matches(row_text: str) -> bool:
+    """True if a list row is for the target proceeding AND is a Proposed Decision
+    or Alternate Proposed Decision. Thin wrapper over classify_proceeding_entry."""
+    return classify_proceeding_entry(row_text) is not None
 
 
 def proceeding_signature(entry: dict) -> str:
@@ -589,17 +609,53 @@ def build_email(kind: str, result: dict, target: dict, detected_at: datetime,
     return subject, body, html_body
 
 
-def build_proceeding_email(matches: list, now: datetime):
-    """Return (subject, text_body, html_body) for the A2507016 Proposed Decision
-    alert. One email covers all newly-detected matching documents (usually one)."""
+def build_proceeding_email(matches: list, now: datetime, kind: str = "proposed_decision"):
+    """Return (subject, text_body, html_body) for an A2507016 alert.
+
+    kind="proposed_decision" → the ALJ's Proposed Decision.
+    kind="alternate"         → an Alternate Proposed Decision (a Commissioner
+                               proposing a different outcome than the ALJ).
+    One email covers all newly-detected documents of that kind (usually one).
+    """
     detected_str = now.strftime("%Y-%m-%d %H:%M:%S %Z")
     proc = f"{PROCEEDING_ID} ({PROCEEDING_LABEL})"
-    subject = f"CPUC ALERT — Proposed Decision in Proceeding {proc}"
 
-    parts = [
-        f"A Proposed Decision matching proceeding {proc} has been posted to the "
-        f"CPUC Decisions and Resolutions for Public Comment list.\n",
-    ]
+    if kind == "alternate":
+        subject = f"CPUC ALERT — Alternate Proposed Decision in Proceeding {proc}"
+        intro_text = (
+            f"An ALTERNATE Proposed Decision for proceeding {proc} has been "
+            f"posted to the CPUC Decisions and Resolutions for Public Comment "
+            f"list.\n\n"
+            f"WHAT THIS MEANS: An Alternate Proposed Decision is filed by a "
+            f"Commissioner (not the assigned Administrative Law Judge) who is "
+            f"proposing a DIFFERENT outcome than the ALJ's Proposed Decision, "
+            f"ahead of the Commission's vote. The Commission may ultimately "
+            f"adopt the ALJ's version, the alternate, or neither.\n"
+        )
+        intro_html = (
+            f"<p>An <b>Alternate Proposed Decision</b> for proceeding "
+            f"{html.escape(proc)} has been posted to the CPUC Decisions and "
+            f"Resolutions for Public Comment list.</p>"
+            f"<p><b>What this means:</b> An Alternate Proposed Decision is filed "
+            f"by a <b>Commissioner</b> (not the assigned Administrative Law "
+            f"Judge) who is proposing a <b>different outcome</b> than the ALJ's "
+            f"Proposed Decision, ahead of the Commission's vote. The Commission "
+            f"may ultimately adopt the ALJ's version, the alternate, or "
+            f"neither.</p>"
+        )
+    else:
+        subject = f"CPUC ALERT — Proposed Decision in Proceeding {proc}"
+        intro_text = (
+            f"A Proposed Decision matching proceeding {proc} has been posted to "
+            f"the CPUC Decisions and Resolutions for Public Comment list.\n"
+        )
+        intro_html = (
+            f"<p>A Proposed Decision matching proceeding {html.escape(proc)} has "
+            f"been posted to the CPUC Decisions and Resolutions for Public "
+            f"Comment list.</p>"
+        )
+
+    parts = [intro_text]
     doc_html = ""
     for i, m in enumerate(matches, 1):
         pdf = m.get("pdf_url") or "(no direct PDF link found)"
@@ -625,8 +681,7 @@ def build_proceeding_email(matches: list, now: datetime):
     text_body = "\n".join(parts)
 
     html_body = (
-        f"<p>A Proposed Decision matching proceeding {html.escape(proc)} has been "
-        f"posted to the CPUC Decisions and Resolutions for Public Comment list.</p>"
+        f"{intro_html}"
         f"{doc_html}"
         f"<p><b>Detected at:</b> {html.escape(detected_str)} (Pacific time)<br>"
         f"<b>Source:</b> {_pdf_html(PROPOSED_DECISIONS_URL)}</p>"
@@ -816,36 +871,52 @@ def run_proceeding_watch(state, config, now) -> None:
         log(f"Proceeding {PROCEEDING_ID}: fetch error: {exc!r}")
         return
 
-    matches = [r for r in results if proceeding_entry_matches(r["row_text"])]
+    # Classify each row as an ALJ Proposed Decision or an Alternate Proposed
+    # Decision (or skip). Each kind gets its own alert.
+    matches = []
+    for r in results:
+        kind = classify_proceeding_entry(r["row_text"])
+        if kind:
+            matches.append((kind, r))
     log(
         f"Proceeding {PROCEEDING_ID}: {len(results)} PD list entries, "
-        f"{len(matches)} match the proceeding + keyword filter."
+        f"{len(matches)} match the proceeding."
     )
 
     seen = pstate["seen"]
-    new_matches = [m for m in matches if proceeding_signature(m) not in seen]
+    new_matches = [(k, r) for (k, r) in matches if proceeding_signature(r) not in seen]
     if not new_matches:
         if matches:
             log(f"Proceeding {PROCEEDING_ID}: match(es) already alerted — nothing new.")
         return
 
-    subject, body, html_body = build_proceeding_email(new_matches, now)
-    try:
-        send_email(subject, body, config, html_body=html_body)
-    except Exception as exc:
-        log(
-            f"Proceeding {PROCEEDING_ID}: MATCH found but email failed: {exc!r}. "
-            "Will retry next run."
-        )
-        return
+    # Group newly-detected documents by kind and send one alert per kind.
+    by_kind = {}
+    for k, r in new_matches:
+        by_kind.setdefault(k, []).append(r)
 
-    for m in new_matches:
-        seen.append(proceeding_signature(m))
-    pstate["detected_at"] = now.isoformat()
-    log(
-        f"Proceeding {PROCEEDING_ID}: ALERT sent for {len(new_matches)} new "
-        f"document(s)."
-    )
+    labels = {"alternate": "Alternate Proposed Decision", "proposed_decision": "Proposed Decision"}
+    sent_any = False
+    for kind, entries in by_kind.items():
+        subject, body, html_body = build_proceeding_email(entries, now, kind=kind)
+        try:
+            send_email(subject, body, config, html_body=html_body)
+        except Exception as exc:
+            log(
+                f"Proceeding {PROCEEDING_ID}: {labels[kind]} found but email "
+                f"failed: {exc!r}. Will retry next run."
+            )
+            continue  # leave these unseen so they retry next run
+        for r in entries:
+            seen.append(proceeding_signature(r))
+        sent_any = True
+        log(
+            f"Proceeding {PROCEEDING_ID}: ALERT sent for {len(entries)} new "
+            f"{labels[kind]}(s)."
+        )
+
+    if sent_any:
+        pstate["detected_at"] = now.isoformat()
 
 
 # --------------------------------------------------------------------------
@@ -1006,18 +1077,28 @@ def main() -> int:
                 subject, body, html_body = build_email(
                     "hold_list", sample, sample_target, now
                 )
-            elif test_alert in ("proceeding", "pd", "proposed", "proposeddecision"):
+            elif test_alert in ("proceeding", "pd", "proposed", "proposeddecision",
+                                 "alternate", "apd"):
+                is_alt = test_alert in ("alternate", "apd")
                 sample_matches = [{
-                    "title": "Proposed Decision of ALJ (Charter Communications / Cox)",
+                    "title": (
+                        "Alternate Proposed Decision of Commissioner (Charter Communications / Cox)"
+                        if is_alt else
+                        "Proposed Decision of ALJ (Charter Communications / Cox)"
+                    ),
                     "pdf_url": "https://docs.cpuc.ca.gov/PublishedDocs/Published/G000/M620/K333/620333444.PDF",
                     "published_date": now.strftime("%m/%d/%Y"),
                     "row_text": "Proposed Decision ... Proceeding: A2507016",
                 }]
-                subject, body, html_body = build_proceeding_email(sample_matches, now)
+                subject, body, html_body = build_proceeding_email(
+                    sample_matches, now,
+                    kind="alternate" if is_alt else "proposed_decision",
+                )
             else:
                 log(
                     f"TEST_ALERT: unknown value '{test_alert}'. Use one of: "
-                    "agenda, agenda-notfound, agenda-undetermined, holdlist, proceeding."
+                    "agenda, agenda-notfound, agenda-undetermined, holdlist, "
+                    "proceeding, alternate."
                 )
                 return 1
 

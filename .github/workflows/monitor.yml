@@ -30,6 +30,7 @@ on:
           - agenda-undetermined
           - holdlist
           - proceeding
+          - alternate
 
 # Allow the job to push the updated state/log back to the repo.
 permissions:

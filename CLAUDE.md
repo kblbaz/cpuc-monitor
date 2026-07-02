@@ -19,9 +19,11 @@ alert is sent.
 
 It also watches **one standing target**, independent of the meeting cycle:
 
-3. **ALJ Proposed Decision on proceeding A2507016** (the Charter/Cox merger).
-   Checked every run against the CPUC Proposed Decisions list; a separate alert
-   is sent when it appears. See "Proceeding A2507016 watch" below.
+3. **Proposed Decisions on proceeding A2507016** (the Charter/Cox merger).
+   Checked every run against the CPUC Proposed Decisions list. Sends a separate
+   alert for the **ALJ's Proposed Decision** and a distinct alert for any
+   **Alternate Proposed Decision** (a Commissioner's competing version). See
+   "Proceeding A2507016 watch" below.
 
 ## How it runs (IMPORTANT — read before changing anything)
 
@@ -87,14 +89,24 @@ the 5-minute peak zone spans the whole 8–15 day band to cover both.
   whose URL 404'd and whose only machine-readable form is a PDF search.
 - **Cadence:** every 3 hours (`PROCEEDING_INTERVAL`). The source updates about
   once per business day, so 3h catches a PD the same day without needless polls.
-- **Match rule:** a list row matches when its text contains the proceeding id
+- **Match + classify:** a list row must contain the proceeding id
   (`PROCEEDING_ID`, matched punctuation-insensitively so `A.25-07-016` ==
-  `A2507016`) **and** one of `PROCEEDING_KEYWORDS` ("proposed decision" / "alj").
+  `A2507016`). `classify_proceeding_entry()` then labels it:
+  - `"alternate"` — row has "alternate" + "proposed decision" → an **Alternate
+    Proposed Decision** (filed by a Commissioner proposing a different outcome
+    than the ALJ, before the vote). Checked first, since an APD also contains the
+    substring "proposed decision".
+  - `"proposed_decision"` — row matches a `PROCEEDING_KEYWORDS` term
+    ("proposed decision" / "alj") → the ALJ's original Proposed Decision.
 - **De-dup:** each alerted entry's signature (its PDF url, else a hash of the
   row text) is stored in `proceeding.seen`; a repeat listing never re-alerts.
-- **Separate alert:** sends its own email (`build_proceeding_email()`) with the
-  document title, date posted, and direct PDF link — never merged with the
-  agenda/hold-list emails.
+  Because signatures are per-document, the original PD and its Alternate are
+  tracked independently.
+- **Separate alerts per kind:** `run_proceeding_watch()` groups new documents by
+  kind and sends one email per kind via `build_proceeding_email(..., kind=...)`.
+  The Alternate alert's subject/body explain it's a Commissioner's alternate to
+  the ALJ's decision. Each carries the title, date posted, and direct PDF link —
+  never merged with the agenda/hold-list emails.
 - **State isolation:** lives under the `proceeding` key and is **preserved across
   meeting resets** (captured in `main()` before `select_target_meeting()` may
   replace the state dict, then re-attached). `reset_state_for()` deliberately
@@ -181,8 +193,8 @@ a secondary confirmation, not a strict requirement.
   dry-run the PDF parse without waiting for a real agenda detection.
 - `TEST_ALERT=<kind>` → build a **real** alert email from sample data and send it
   (subject prefixed `[TEST]`), then exit. Kinds: `agenda`, `agenda-notfound`,
-  `agenda-undetermined`, `holdlist`, `proceeding`. Lets you preview the actual
-  alert formatting in your inbox. Value `none`/empty is a no-op.
+  `agenda-undetermined`, `holdlist`, `proceeding`, `alternate`. Lets you preview
+  the actual alert formatting in your inbox. Value `none`/empty is a no-op.
 - `TEST_RECIPIENT=<email>` → optional override (a **secret**, not a workflow
   input, so it stays out of the public repo's run logs). When set, `TEST_EMAIL`
   and `TEST_ALERT` send **only** to this address via `send_email`'s

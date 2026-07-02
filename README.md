@@ -286,10 +286,16 @@ in the meeting cycle is checked more than 20 days before a meeting.
 | Every run | Check the CPUC Proposed Decisions list every 3 hours |
 
 Runs regardless of the meeting cycle (even between meetings). It scans the
-Proposed Decisions list for a row mentioning proceeding **A2507016** together
-with "Proposed Decision" or "ALJ". On a new match → send a **separate** alert
-with the document title, date posted, and direct PDF link. Each matching
-document alerts only once.
+Proposed Decisions list for a row mentioning proceeding **A2507016**, and
+classifies each match:
+
+- **ALJ Proposed Decision** — the assigned judge's proposed outcome.
+- **Alternate Proposed Decision** — a Commissioner's competing version, filed
+  when a Commissioner wants a different outcome than the ALJ before the vote.
+
+Each kind sends its own **separate** alert (the Alternate alert's subject and
+body explain what an Alternate Proposed Decision is). Alerts include the document
+title, date posted, and direct PDF link, and each document alerts only once.
 
 ---
 
