@@ -71,3 +71,7 @@
 [2026-07-02 15:36:42 PDT] Agenda: does not match target 2026-07-16 (Agenda #3584) yet.
 [2026-07-02 15:36:42 PDT] Hold List: skipped (agenda not yet confirmed).
 [2026-07-02 15:36:42 PDT] Run complete.
+[2026-07-02 16:00:13 PDT] TEST_AGENDA_PDF set — checking https://docs.cpuc.ca.gov/PublishedDocs/Published/G000/M609/K934/609934454.PDF
+[2026-07-02 16:00:19 PDT] TEST_AGENDA_PDF: extracted 67609 chars; 38 proceeding number(s) found.
+[2026-07-02 16:00:19 PDT] TEST_AGENDA_PDF: A2507016 present = False
+[2026-07-02 16:00:19 PDT] TEST_AGENDA_PDF: sample proceedings: A.22-02-015, A.22-05-015, A.22-05-016, A.22-08-003, A.23-01-001, A.23-01-008, A.23-10-009, A.23-11-002, A.24-01-005, A.24-01-016, A.24-07-021, A.24-08-004, A.24-11-005, A.24-11-009, A.24-12-001, A.24-12-009, A.25-01-001, A.25-01-009, A.25-02-012, A.25-04-015
