@@ -116,6 +116,9 @@ a secondary confirmation, not a strict requirement.
   Yahoo for automated senders — confirmed during setup — so it was abandoned.
   `YAHOO_EMAIL` is reused only as the Brevo-verified **sender** ("from") address;
   `YAHOO_APP_PASSWORD` is no longer used. `BREVO_API_KEY` starts with `xkeysib-`.
+- `send_email()` takes an optional `html_body`; when given, it sends both
+  `textContent` and `htmlContent`. Only the `TEST_EMAIL` message uses this (for
+  underline/bold/bulleted formatting) — the Agenda/Hold List alerts are plain text.
 
 ## config.json shape
 
