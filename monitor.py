@@ -52,6 +52,10 @@ HOLD_LIST_URL = (
     "&DocTitleStart=Hold%20List&Latest=1"
 )
 
+# monitor.log is append-only and committed back to the repo every run, so cap it
+# to the most recent LOG_MAX_LINES lines to keep the repo from bloating over time.
+LOG_MAX_LINES = 5000
+
 REQUEST_TIMEOUT = 30
 USER_AGENT = (
     "Mozilla/5.0 (compatible; CPUC-Meeting-Monitor/1.0; "
@@ -138,6 +142,22 @@ def log(message: str) -> None:
             fh.write(line + "\n")
     except OSError as exc:  # never let logging crash the run
         print(f"[{stamp}] WARNING: could not write log file: {exc}", flush=True)
+
+
+def trim_log() -> None:
+    """Keep monitor.log bounded by retaining only the most recent LOG_MAX_LINES
+    lines. Runs once per invocation before any new lines are written."""
+    try:
+        if not LOG_PATH.exists():
+            return
+        with LOG_PATH.open(encoding="utf-8") as fh:
+            lines = fh.readlines()
+        if len(lines) <= LOG_MAX_LINES:
+            return
+        with LOG_PATH.open("w", encoding="utf-8") as fh:
+            fh.writelines(lines[-LOG_MAX_LINES:])
+    except OSError as exc:  # never let log rotation crash the run
+        print(f"WARNING: could not trim log file: {exc}", flush=True)
 
 
 # --------------------------------------------------------------------------
@@ -397,13 +417,16 @@ def is_due(last_checked, interval: timedelta, now: datetime) -> bool:
 
 def agenda_interval(days_until: int):
     """Required minimum interval for Phase 1, or None if outside the window."""
-    if days_until > 12:
+    if days_until > 20:
         return None
-    if days_until == 12:
-        return ONE_DAY
-    if 8 <= days_until <= 11:
-        return FIVE_MIN  # agenda almost always drops ~10 days out -> check often
-    return HOUR  # day 7 and earlier: hourly safety net in case it's late
+    if 16 <= days_until <= 20:
+        return ONE_DAY  # watching begins; agenda this early is unlikely
+    if 8 <= days_until <= 15:
+        # Peak zone: the agenda must be published 10 days in advance, but CPUC's
+        # "10 days" could mean calendar days (~day 10) or business days (~day 14,
+        # up to 15 with a holiday). Poll frequently across the whole band.
+        return FIVE_MIN
+    return HOUR  # day 7 and earlier: hourly safety net (agenda is overdue)
 
 
 def hold_list_interval(days_until: int) -> timedelta:
@@ -518,6 +541,7 @@ def run_phase_hold_list(state, target, config, now, days_until) -> None:
 # Main
 # --------------------------------------------------------------------------
 def main() -> int:
+    trim_log()  # cap monitor.log before this run appends to it
     now = now_pacific()
     today = now.date()
 
@@ -619,8 +643,8 @@ def main() -> int:
         f"(Agenda #{target.get('agenda_number')}), {days_until} days out."
     )
 
-    if days_until > 12:
-        log("More than 12 days before meeting — no checks performed.")
+    if days_until > 20:
+        log("More than 20 days before meeting — no checks performed.")
         save_state(state)
         return 0
 

@@ -45,10 +45,13 @@ All timing is computed in **Pacific time** (`America/Los_Angeles`).
 "Due" = enough time has elapsed since `last_checked` for that phase.
 
 ### Phase 1 — Agenda monitoring
-- More than 12 days before meeting → do not check.
-- Exactly 12 days before → check once per day.
-- 8–11 days before → check every 5 minutes (agenda almost always drops ~10 days
-  out, so we poll frequently across that window).
+The agenda must be published 10 days in advance, but CPUC's "10 days" may mean
+calendar days (~day 10) or business days (~day 14, up to 15 with a holiday), so
+the 5-minute peak zone spans the whole 8–15 day band to cover both.
+- More than 20 days before meeting → do not check.
+- 16–20 days before → check once per day (watching begins; agenda this early is
+  unlikely).
+- 8–15 days before → check every 5 minutes (peak zone).
 - 7 days or fewer → check every hour (safety net, in case the agenda is late).
 - On detect + match to target meeting → send **Agenda** email,
   set `agenda.confirmed = true`, begin Phase 2.
@@ -62,9 +65,11 @@ All timing is computed in **Pacific time** (`America/Los_Angeles`).
 
 ### Hard rules
 - Never check the Hold List before the agenda is confirmed.
-- Never check anything more than 12 days before a meeting.
+- Never check anything more than 20 days before a meeting.
 - All timestamps in Pacific time.
-- Log every check with timestamp and result.
+- Log every check with timestamp and result. `monitor.log` is auto-trimmed to
+  the last `LOG_MAX_LINES` (5000) lines each run (`trim_log()`), since it is
+  committed back to the repo every run.
 
 ## How the CPUC pages work
 

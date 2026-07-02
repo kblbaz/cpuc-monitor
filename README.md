@@ -249,10 +249,14 @@ script decides whether to actually check CPUC.
 **Phase 1 — Agenda**
 | Days before meeting | Action |
 |---|---|
-| More than 12 | Do nothing |
-| Exactly 12 | Check once per day |
-| 8–11 | **Check every 5 minutes** (the agenda almost always drops ~10 days out) |
+| More than 20 | Do nothing |
+| 16–20 | Check once per day (watching begins; agenda this early is unlikely) |
+| 8–15 | **Check every 5 minutes** — the peak zone |
 | 7 or fewer | Check every hour (safety net, in case it's late) |
+
+The agenda must be published 10 days in advance, but CPUC's "10 days" may mean
+calendar days (~day 10) or business days (~day 14). The 8–15 day peak zone covers
+both interpretations.
 
 When the Agenda for the target meeting is found → send Agenda email, mark it
 confirmed, and start Phase 2.
@@ -267,7 +271,7 @@ When the Hold List is found → send Hold List email, mark it confirmed. After t
 meeting date passes, the monitor moves on to the next meeting in `config.json`.
 
 The Hold List is **never** checked before the Agenda is confirmed, and **nothing**
-is checked more than 12 days before a meeting.
+is checked more than 20 days before a meeting.
 
 ---
 

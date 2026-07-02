@@ -7,7 +7,7 @@ on:
   schedule:
     # Every 5 minutes (GitHub's minimum; busy runs may be delayed). monitor.py
     # self-gates, so it only actually hits CPUC on its own cadence — every 5 min
-    # in the day 8-11 agenda window, less often otherwise. Free on a PUBLIC repo.
+    # in the day 8-15 agenda peak zone, less often otherwise. Free on a PUBLIC repo.
     - cron: "*/5 * * * *"
   workflow_dispatch:       # lets you run it manually from the Actions tab
     inputs:
