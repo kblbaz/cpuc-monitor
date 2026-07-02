@@ -36,6 +36,9 @@ to be on.
 - When the Agenda for your target meeting appears, you get **email #1**. After
   that, it starts watching for the **Hold List** and sends **email #2** when it
   appears.
+- That Agenda email also **reads the agenda PDF** and tells you, in the same
+  email, whether proceeding **A2507016** (the Charter/Cox merger) appears on that
+  agenda — or that it doesn't. (No separate email; it's folded in.)
 - In the **same run**, it also watches for the **ALJ Proposed Decision on
   proceeding A2507016** (the Charter/Cox merger) on the CPUC Proposed Decisions
   list, and sends a **separate alert** if it appears. This check is independent

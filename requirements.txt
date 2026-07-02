@@ -1,6 +1,9 @@
 requests>=2.31
 beautifulsoup4>=4.12
 python-dotenv>=1.0
+# pypdf extracts the agenda PDF text so we can report whether proceeding
+# A2507016 appears on a published voting-meeting agenda.
+pypdf>=4.0
 # tzdata gives zoneinfo its database on platforms that lack one (Windows, slim
 # containers). monitor.py also has a built-in Pacific fallback, so this is a
 # belt-and-suspenders dependency.

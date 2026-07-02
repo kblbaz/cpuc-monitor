@@ -61,6 +61,14 @@ the 5-minute peak zone spans the whole 8–15 day band to cover both.
 - 7 days or fewer → check every hour (safety net, in case the agenda is late).
 - On detect + match to target meeting → send **Agenda** email,
   set `agenda.confirmed = true`, begin Phase 2.
+- Before sending, the agenda **PDF text is extracted** (`fetch_pdf_text()` via
+  `pypdf`) and searched for `PROCEEDING_ID`. The result is folded **into the same
+  agenda email** (not a separate alert): it states whether A2507016 appears on
+  the agenda ("YES …" / "not found …"), or "could not be determined" if the PDF
+  is unreadable. When found, the subject gets a "— A2507016 ON AGENDA" marker.
+  Agenda items list proceeding numbers as `A.25-07-016`; `_normalize()` strips
+  the punctuation so it matches `A2507016`. Verified: agenda PDFs are text-based
+  (Oracle BI Publisher) and do contain proceeding numbers.
 
 ### Phase 2 — Hold List monitoring
 - Begins only after the agenda is confirmed for the target meeting.
@@ -142,7 +150,7 @@ a secondary confirmation, not a strict requirement.
 | `.env` | Local credentials (gitignored, never commit) |
 | `.env.example` | Template for `.env` |
 | `.gitignore` | Excludes `.env` |
-| `requirements.txt` | requests, beautifulsoup4, python-dotenv, tzdata |
+| `requirements.txt` | requests, beautifulsoup4, python-dotenv, pypdf, tzdata |
 | `.github/workflows/monitor.yml` | Hourly cron + commit-back of state |
 | `README.md` | Full setup + deployment instructions |
 | `monitor.log` | Append-only run log (committed by the workflow) |
@@ -203,5 +211,6 @@ already alerted on, so the same Proposed Decision listing never re-alerts.
 
 - Python 3.9+ (`zoneinfo` from stdlib; `tzdata` in requirements for Windows).
 - All file paths relative (no absolute Windows paths).
-- BeautifulSoup4 + requests for scraping; `requests` to the Brevo API for email.
+- BeautifulSoup4 + requests for scraping; `pypdf` to read agenda PDF text;
+  `requests` to the Brevo API for email.
 - Keep parsing resilient to title-format variation.

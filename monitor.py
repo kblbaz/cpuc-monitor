@@ -415,6 +415,39 @@ def proceeding_signature(entry: dict) -> str:
     return "sig:" + hashlib.md5(_normalize(entry["row_text"]).encode("utf-8")).hexdigest()
 
 
+def fetch_pdf_text(url: str) -> str:
+    """Download a PDF and return its extracted text. Raises on network/parse
+    failure so callers can distinguish 'unreadable' from 'read, no match'."""
+    import requests
+    from io import BytesIO
+    from pypdf import PdfReader
+
+    resp = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=REQUEST_TIMEOUT)
+    resp.raise_for_status()
+    reader = PdfReader(BytesIO(resp.content))
+    return "\n".join((page.extract_text() or "") for page in reader.pages)
+
+
+def agenda_mentions_proceeding(pdf_url):
+    """Whether PROCEEDING_ID appears in the agenda PDF text.
+
+    Returns True/False when the PDF is read successfully, or None when it can't
+    be fetched/parsed (so the email can say 'undetermined' rather than 'absent').
+    Proceeding numbers print on agendas as 'A.25-07-016'; _normalize() strips the
+    punctuation so they match PROCEEDING_ID ('A2507016').
+    """
+    if not pdf_url:
+        return None
+    try:
+        text = fetch_pdf_text(pdf_url)
+    except Exception as exc:
+        log(f"Agenda: could not read PDF for {PROCEEDING_ID} check: {exc!r}")
+        return None
+    if not text.strip():
+        return None
+    return PROCEEDING_ID.lower() in _normalize(text)
+
+
 # --------------------------------------------------------------------------
 # Email
 # --------------------------------------------------------------------------
@@ -465,8 +498,13 @@ def send_email(subject: str, body: str, config: dict, html_body: str = None) -> 
     log(f"Email: sent via Brevo to {len(recipients)} recipient(s).")
 
 
-def build_email(kind: str, result: dict, target: dict, detected_at: datetime):
-    """Return (subject, body) for an Agenda or Hold List alert."""
+def build_email(kind: str, result: dict, target: dict, detected_at: datetime,
+                proceeding_on_agenda=None):
+    """Return (subject, body) for an Agenda or Hold List alert.
+
+    For the Agenda alert, proceeding_on_agenda (True/False/None) is folded in so
+    the same email reports whether proceeding A2507016 appears on the agenda.
+    """
     meeting = result.get("meeting_date") or parse_iso_date(target["date"])
     # "%-d" (no leading zero) is non-portable on Windows; fall back gracefully.
     try:
@@ -489,6 +527,25 @@ def build_email(kind: str, result: dict, target: dict, detected_at: datetime):
         f"PDF link:       {pdf}\n"
         f"Detected at:    {detected_str} (Pacific time)\n"
     )
+
+    if kind == "agenda":
+        if proceeding_on_agenda is True:
+            subject += f" — {PROCEEDING_ID} ON AGENDA"
+            body += (
+                f"\nProceeding {PROCEEDING_ID} (Charter/Cox merger): "
+                f"YES — this proceeding appears on this agenda.\n"
+            )
+        elif proceeding_on_agenda is False:
+            body += (
+                f"\nProceeding {PROCEEDING_ID} (Charter/Cox merger): "
+                f"not found on this agenda.\n"
+            )
+        else:
+            body += (
+                f"\nProceeding {PROCEEDING_ID} (Charter/Cox merger): "
+                f"could not be determined (agenda PDF could not be read).\n"
+            )
+
     return subject, body
 
 
@@ -601,7 +658,16 @@ def run_phase_agenda(state, target, config, now, days_until) -> bool:
         )
         return False
 
-    subject, body = build_email("agenda", result, target, now)
+    # Read the agenda PDF to report whether A2507016 is on this agenda.
+    on_agenda = agenda_mentions_proceeding(result["pdf_url"])
+    if on_agenda is True:
+        log(f"Agenda: {PROCEEDING_ID} FOUND on this agenda.")
+    elif on_agenda is False:
+        log(f"Agenda: {PROCEEDING_ID} not on this agenda.")
+    else:
+        log(f"Agenda: {PROCEEDING_ID} presence undetermined (PDF unreadable).")
+
+    subject, body = build_email("agenda", result, target, now, proceeding_on_agenda=on_agenda)
     try:
         send_email(subject, body, config)
     except Exception as exc:
