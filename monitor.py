@@ -492,6 +492,17 @@ def agenda_mentions_proceeding(pdf_url):
 # --------------------------------------------------------------------------
 # Email
 # --------------------------------------------------------------------------
+def _text_to_html(text: str) -> str:
+    """Wrap a plain-text body as HTML, preserving line breaks and the aligned
+    spacing (via white-space:pre-wrap). Used to guarantee every email has an HTML
+    part even when the caller supplies only text."""
+    return (
+        '<div style="font-family:Arial,Helvetica,sans-serif;white-space:pre-wrap">'
+        + html.escape(text)
+        + "</div>"
+    )
+
+
 def send_email(subject: str, body: str, config: dict, html_body: str = None,
                recipients_override: str = None) -> None:
     """Send an alert through Brevo's HTTPS web API. Raises on failure.
@@ -499,6 +510,10 @@ def send_email(subject: str, body: str, config: dict, html_body: str = None,
     ALERT_EMAIL (or config["alert_email"]) may contain several recipients
     separated by commas; every address listed receives the alert. The sender
     must be a Brevo-verified address (YAHOO_EMAIL / config["from_email"]).
+
+    Every email is sent as HTML with the plain text as fallback: if html_body is
+    not supplied, one is generated from `body`. So all emails — real or test —
+    default to HTML-with-plain-text-fallback.
 
     recipients_override (used by the TEST_* toggles via TEST_RECIPIENT) sends
     only to the given comma-separated address(es) instead of ALERT_EMAIL, so a
@@ -525,9 +540,10 @@ def send_email(subject: str, body: str, config: dict, html_body: str = None,
         "bcc": [{"email": addr} for addr in recipients],
         "subject": subject,
         "textContent": body,
+        # Always include an HTML part (generated from the text if not supplied),
+        # so every email is HTML with a plain-text fallback.
+        "htmlContent": html_body or _text_to_html(body),
     }
-    if html_body:
-        payload["htmlContent"] = html_body
     headers = {
         "api-key": api_key,
         "accept": "application/json",

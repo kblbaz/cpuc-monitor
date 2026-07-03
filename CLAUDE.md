@@ -210,13 +210,15 @@ a secondary confirmation, not a strict requirement.
   Yahoo for automated senders — confirmed during setup — so it was abandoned.
   `YAHOO_EMAIL` is reused only as the Brevo-verified **sender** ("from") address;
   `YAHOO_APP_PASSWORD` is no longer used. `BREVO_API_KEY` starts with `xkeysib-`.
-- `send_email()` takes an optional `html_body`; when given, it sends both
-  `textContent` and `htmlContent` (clients fall back to text). All real alerts
-  (Agenda, Hold List, A2507016 Proposed Decision) and the `TEST_EMAIL` message
-  send both. `build_email()` and `build_proceeding_email()` return
-  `(subject, text_body, html_body)`. Scraped fields are `html.escape()`d (CPUC
-  titles contain `&`, e.g. "PG&E"). The proceeding is shown as
-  `A2507016 (Charter/Cox)` everywhere via `PROCEEDING_ID` + `PROCEEDING_LABEL`.
+- **Every email is HTML with a plain-text fallback, by default.** `send_email()`
+  always sets both `textContent` and `htmlContent`; if a caller doesn't pass
+  `html_body`, one is generated from the text via `_text_to_html()`
+  (white-space:pre-wrap). So real alerts and every `TEST_*` path are HTML+text
+  without each call site having to remember. `build_email()` and
+  `build_proceeding_email()` return `(subject, text_body, html_body)` with rich
+  HTML. Scraped fields are `html.escape()`d (CPUC titles contain `&`, e.g.
+  "PG&E"). The proceeding is shown as `A2507016 (Charter/Cox)` everywhere via
+  `PROCEEDING_ID` + `PROCEEDING_LABEL`.
 
 ### Debug / test toggles (env vars; each skips monitoring and exits)
 - `TEST_EMAIL=1` → send the subscriber "You're Subscribed" test email and exit.
