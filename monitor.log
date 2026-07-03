@@ -105,3 +105,6 @@
 [2026-07-02 18:52:52 PDT] TEST_ALERT=agenda-notfound — sending a sample alert email and exiting.
 [2026-07-02 18:52:53 PDT] Email: sent via Brevo to 1 recipient(s).
 [2026-07-02 18:52:53 PDT] TEST_ALERT: sample alert sent successfully.
+[2026-07-02 18:57:36 PDT] TEST_EMAIL set — sending a test email and exiting.
+[2026-07-02 18:57:37 PDT] Email: sent via Brevo to 1 recipient(s).
+[2026-07-02 18:57:37 PDT] Test email sent successfully.
