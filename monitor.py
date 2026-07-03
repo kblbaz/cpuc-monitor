@@ -1493,7 +1493,7 @@ def main() -> int:
                 "CPUC Meeting Monitor - Update",
                 (
                     "Plot twist. 🎬\n\n"
-                    "Here's the part we didn't fully appreciate at first: the "
+                    "Turns out the whole plot hinges on one document: the "
                     "Commission can't vote on the Charter Communications / Cox "
                     "merger (CPUC proceeding A2507016) until the assigned judge "
                     "issues a Proposed Decision first. That one document is the "
@@ -1530,7 +1530,7 @@ def main() -> int:
                 config,
                 html_body=(
                     "<p><b>Plot twist.</b> 🎬</p>"
-                    "<p>Here's the part we didn't fully appreciate at first: the "
+                    "<p>Turns out the whole plot hinges on one document: the "
                     "Commission <b>can't vote</b> on the <b>Charter "
                     "Communications / Cox merger</b> (CPUC proceeding A2507016) "
                     "until the assigned judge issues a <b>Proposed Decision "
