@@ -811,7 +811,8 @@ def pd_schedule(entry: dict, now: datetime, kind: str = "proposed_decision") -> 
         comment_days_used = 0
         comment_note = (
             "WAIVED — all parties stipulated (detected) — BUT VERIFY" if is_alt else
-            "appears WAIVED — unusual for a PD (emergency only) — BUT VERIFY"
+            "appears WAIVED — unusual for a Proposed Decision (emergency only) "
+            "— BUT VERIFY"
         )
     elif comment_days is not None:
         comment_days_used = comment_days
@@ -938,8 +939,8 @@ def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
         )
     lines.append(
         "(Deadlines on weekends and CA State Holidays are rolled to the next "
-        "business day per CPUC Rule 1.15. The PD text and CPUC Daily Calendar "
-        "remain authoritative — verify the extracted values.)"
+        "business day per CPUC Rule 1.15. The Proposed Decision text and CPUC "
+        "Daily Calendar remain authoritative — verify the extracted values.)"
     )
     text_block = "\n".join(lines)
 
@@ -1004,8 +1005,8 @@ def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
     hs.append(
         "<p style='font-size:12px;color:#777777;margin-top:14px'><i>Deadlines on "
         "weekends and CA State Holidays are rolled to the next business day per "
-        "CPUC Rule 1.15. The PD text and CPUC Daily Calendar remain authoritative "
-        "— verify the extracted values.</i></p>"
+        "CPUC Rule 1.15. The Proposed Decision text and CPUC Daily Calendar remain "
+        "authoritative — verify the extracted values.</i></p>"
     )
     html_block = "".join(hs)
 
