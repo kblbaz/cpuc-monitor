@@ -88,6 +88,21 @@ REPLY_COMMENT_DAYS = 5                  # Rule 14.3 reply-comment window
 HSR_LABEL = "antitrust clearance deadline"
 HSR_LABEL_FULL = HSR_LABEL
 
+# CA state holidays the CPUC observes. Under Rule 1.15, a comment/reply deadline
+# landing on a weekend or one of these rolls to the next business day. MAINTAIN
+# this list as years pass (only dates that could fall within a comment/reply
+# window matter). Note: Independence Day 2026 (Jul 4, Sat) was observed Fri
+# Jul 3; the next holiday before the Sep 15 2026 deadline is Labor Day Sep 7.
+CPUC_HOLIDAYS = {
+    "2026-09-07",  # Labor Day
+    "2026-11-11",  # Veterans Day
+    "2026-11-26",  # Thanksgiving Day
+    "2026-11-27",  # Day after Thanksgiving (CA state holiday)
+    "2026-12-25",  # Christmas Day
+    "2027-01-01",  # New Year's Day
+    "2027-01-18",  # Martin Luther King Jr. Day
+}
+
 # monitor.log is append-only and committed back to the repo every run, so cap it
 # to the most recent LOG_MAX_LINES lines to keep the repo from bloating over time.
 LOG_MAX_LINES = 5000
@@ -745,6 +760,14 @@ def _fmt_date(d) -> str:
     return d.strftime("%B %d, %Y").replace(" 0", " ")
 
 
+def _roll_to_business_day(d):
+    """Per CPUC Rule 1.15, roll a date forward to the next business day if it
+    lands on a weekend or a CPUC-observed (CA state) holiday."""
+    while d.weekday() >= 5 or d.isoformat() in CPUC_HOLIDAYS:
+        d = d + timedelta(days=1)
+    return d
+
+
 def pd_schedule(entry: dict, now: datetime, kind: str = "proposed_decision") -> dict:
     """Read a PD / Alternate PD PDF and compute its comment/reply schedule.
 
@@ -821,8 +844,10 @@ def pd_schedule(entry: dict, now: datetime, kind: str = "proposed_decision") -> 
         reply_desc = f"{REPLY_COMMENT_DAYS} days assumed (standard; not detected) — VERIFY"
         reply_days_used = REPLY_COMMENT_DAYS
 
-    comment_end = issued + timedelta(days=comment_days_used)
-    reply_end = comment_end + timedelta(days=reply_days_used)
+    # Calendar-day math, then roll each deadline off weekends/holidays (Rule
+    # 1.15). Reply counts from the (rolled) comment deadline.
+    comment_end = _roll_to_business_day(issued + timedelta(days=comment_days_used))
+    reply_end = _roll_to_business_day(comment_end + timedelta(days=reply_days_used))
 
     return {
         "doctype": doctype,
@@ -912,9 +937,9 @@ def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
             f"(before the {_fmt_date(hsr)} {HSR_LABEL}). **"
         )
     lines.append(
-        "(Dates are calendar-day estimates; a deadline landing on a weekend or "
-        "holiday rolls to the next business day per CPUC Rule 1.15. The PD text "
-        "and CPUC Daily Calendar are authoritative — verify the extracted values.)"
+        "(Deadlines are rolled off weekends and CA state holidays to the next "
+        "business day per CPUC Rule 1.15. The PD text and CPUC Daily Calendar "
+        "remain authoritative — verify the extracted values.)"
     )
     text_block = "\n".join(lines)
 
@@ -977,10 +1002,10 @@ def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
             f"(before the {html.escape(_fmt_date(hsr))} {html.escape(HSR_LABEL)}).</p>"
         )
     hs.append(
-        "<p style='font-size:12px;color:#777777;margin-top:14px'><i>Dates are "
-        "calendar-day estimates; a deadline on a weekend or holiday rolls to the "
-        "next business day per CPUC Rule 1.15. The PD text and CPUC Daily "
-        "Calendar are authoritative — verify the extracted values.</i></p>"
+        "<p style='font-size:12px;color:#777777;margin-top:14px'><i>Deadlines are "
+        "rolled off weekends and CA state holidays to the next business day per "
+        "CPUC Rule 1.15. The PD text and CPUC Daily Calendar remain authoritative "
+        "— verify the extracted values.</i></p>"
     )
     html_block = "".join(hs)
 

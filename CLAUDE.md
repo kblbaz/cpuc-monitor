@@ -142,9 +142,11 @@ by a fixed peak window (`agenda_interval(days_until, frequent)`):
   scheduled meeting on/before the antitrust clearance deadline falls after the
   window. That deadline is shown to recipients simply as "antitrust clearance
   deadline" (`HSR_LABEL`; the "HSR"/Hart-Scott-Rodino jargon is intentionally
-  omitted). Dates are calendar-day estimates (Rule 1.15 weekend/holiday roll
-  noted); the PD text and Daily Calendar are authoritative. Never raises —
-  failures degrade to labelled
+  omitted). Comment/reply deadlines are computed as calendar days then rolled off
+  weekends and CA state holidays to the next business day (`_roll_to_business_day`
+  + `CPUC_HOLIDAYS`, per Rule 1.15) — **maintain `CPUC_HOLIDAYS` as years pass**.
+  The PD text and Daily Calendar are authoritative. Never raises — failures
+  degrade to labelled
   assumptions.
 - **State isolation:** lives under the `proceeding` key and is **preserved across
   meeting resets** (captured in `main()` before `select_target_meeting()` may
