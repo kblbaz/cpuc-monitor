@@ -102,3 +102,6 @@
 [2026-07-02 18:50:35 PDT] Proceeding A2507016: could not read Alternate Proposed Decision PDF for timeline: HTTPError('404 Client Error: Not Found for url: https://docs.cpuc.ca.gov/PublishedDocs/Published/G000/M620/K333/620333444.PDF')
 [2026-07-02 18:50:35 PDT] Email: sent via Brevo to 1 recipient(s).
 [2026-07-02 18:50:35 PDT] TEST_ALERT: sample alert sent successfully.
+[2026-07-02 18:52:52 PDT] TEST_ALERT=agenda-notfound — sending a sample alert email and exiting.
+[2026-07-02 18:52:53 PDT] Email: sent via Brevo to 1 recipient(s).
+[2026-07-02 18:52:53 PDT] TEST_ALERT: sample alert sent successfully.
