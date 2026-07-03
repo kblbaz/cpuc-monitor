@@ -234,6 +234,10 @@ a secondary confirmation, not a strict requirement.
 
 ### Debug / test toggles (env vars; each skips monitoring and exits)
 - `TEST_EMAIL=1` → send the subscriber "You're Subscribed" test email and exit.
+- `SEND_UPDATE=1` → send the one-time "CPUC Meeting Monitor - Update" announcement
+  (the fun "plot twist" email about the new Proposed Decision functionality).
+  Respects `TEST_RECIPIENT` (set it to preview to yourself; unset it to send to
+  the full `ALERT_EMAIL` list). One-off — don't leave it on in the schedule.
 - `TEST_AGENDA_PDF=<url>` → read that agenda PDF, log whether `A2507016` appears
   (plus the proceeding numbers it found), and exit. Sends no email. Use it to
   dry-run the PDF parse without waiting for a real agenda detection.

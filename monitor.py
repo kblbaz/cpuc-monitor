@@ -1483,6 +1483,79 @@ def main() -> int:
             log(f"Test email FAILED: {exc!r}")
             return 1
 
+    # One-time announcement to existing subscribers about the new functionality
+    # (SEND_UPDATE=1). Respects TEST_RECIPIENT: set it to preview to yourself;
+    # leave it unset to send to the full ALERT_EMAIL list.
+    if os.getenv("SEND_UPDATE", "").strip().lower() in ("1", "true", "yes"):
+        log("SEND_UPDATE set — sending the update announcement and exiting.")
+        try:
+            send_email(
+                "CPUC Meeting Monitor - Update",
+                (
+                    "Plot twist. 🎬\n\n"
+                    "Your CPUC Meeting Monitor just got a major upgrade — and "
+                    "it's all about the main event: the Charter Communications / "
+                    "Cox merger (CPUC proceeding A2507016).\n\n"
+                    "Here's what's new:\n\n"
+                    "The Big One: Proposed Decision Alerts\n"
+                    "When the assigned Administrative Law Judge (ALJ) issues a "
+                    "Proposed Decision in the merger, you'll get an alert the "
+                    "same day. A Proposed Decision is the judge's recommended "
+                    "outcome — the document everyone's been waiting for.\n\n"
+                    "...And a \"What Happens Next\" Timeline\n"
+                    "This is the good part. Each Proposed Decision alert reads "
+                    "the document and lays out what happens next: the public "
+                    "comment period, the reply-comment period, the earliest date "
+                    "the matter can actually land on a voting meeting agenda, "
+                    "and — the big question — which upcoming voting meeting is "
+                    "realistically possible before the antitrust clearance "
+                    "deadline. In other words: when can they actually vote on "
+                    "this thing?\n\n"
+                    "Bonus: Agenda Alerts Now Flag the Merger\n"
+                    "When a voting meeting agenda is published, your alert now "
+                    "tells you whether the merger (A2507016) is on it.\n\n"
+                    "Everything you already get — agenda and hold list alerts — "
+                    "keeps coming. You don't need to do anything.\n\n"
+                    "So grab your popcorn. 🍿 The good part is just getting "
+                    "started.\n"
+                ),
+                config,
+                html_body=(
+                    "<p><b>Plot twist.</b> 🎬</p>"
+                    "<p>Your CPUC Meeting Monitor just got a major upgrade — and "
+                    "it's all about the main event: the <b>Charter Communications "
+                    "/ Cox merger</b> (CPUC proceeding A2507016).</p>"
+                    "<p>Here's what's new:</p>"
+                    "<p><b>The Big One: Proposed Decision Alerts</b><br>"
+                    "When the assigned Administrative Law Judge (ALJ) issues a "
+                    "Proposed Decision in the merger, you'll get an alert the "
+                    "same day. A Proposed Decision is the judge's recommended "
+                    "outcome — the document everyone's been waiting for.</p>"
+                    "<p><b>…And a \"What Happens Next\" Timeline</b><br>"
+                    "This is the good part. Each Proposed Decision alert reads "
+                    "the document and lays out what happens next: the public "
+                    "comment period, the reply-comment period, the earliest date "
+                    "the matter can actually land on a voting meeting agenda, "
+                    "and — the big question — which upcoming voting meeting is "
+                    "realistically possible before the antitrust clearance "
+                    "deadline. In other words: <i>when can they actually vote on "
+                    "this thing?</i></p>"
+                    "<p><b>Bonus: Agenda Alerts Now Flag the Merger</b><br>"
+                    "When a voting meeting agenda is published, your alert now "
+                    "tells you whether the merger (A2507016) is on it.</p>"
+                    "<p>Everything you already get — agenda and hold list alerts "
+                    "— keeps coming. You don't need to do anything.</p>"
+                    "<p>So grab your popcorn. 🍿 The good part is just getting "
+                    "started.</p>"
+                ),
+                recipients_override=test_to,
+            )
+            log("Update email sent successfully.")
+            return 0
+        except Exception as exc:
+            log(f"Update email FAILED: {exc!r}")
+            return 1
+
     # On-demand agenda-PDF check (TEST_AGENDA_PDF=<url>). Reads the given agenda
     # PDF, reports whether A2507016 appears (and lists the proceeding numbers it
     # found, for eyeballing), then exits. Lets you dry-run the PDF parse against

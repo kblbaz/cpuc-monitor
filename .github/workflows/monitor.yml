@@ -15,6 +15,10 @@ on:
         description: "Send a test email to confirm delivery works (skips monitoring)"
         type: boolean
         default: false
+      send_update:
+        description: "Send the one-time 'Update' announcement (TEST_RECIPIENT previews; unset it to send to all)"
+        type: boolean
+        default: false
       test_agenda_pdf:
         description: "Debug: agenda PDF URL to check for A2507016 (skips monitoring)"
         type: string
@@ -63,6 +67,7 @@ jobs:
           YAHOO_EMAIL: ${{ secrets.YAHOO_EMAIL }}
           ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
           TEST_EMAIL: ${{ inputs.test_email }}
+          SEND_UPDATE: ${{ inputs.send_update }}
           TEST_AGENDA_PDF: ${{ inputs.test_agenda_pdf }}
           TEST_ALERT: ${{ inputs.test_alert }}
           # Optional secret: if set, TEST_EMAIL/TEST_ALERT go only here (not to
