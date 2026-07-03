@@ -86,8 +86,8 @@ REPLY_COMMENT_DAYS = 5                  # Rule 14.3 reply-comment window
 # How that deadline is described in alerts. "HSR" is legal jargon, so lead with
 # plain language; spell out Hart-Scott-Rodino once (FULL), use the short form
 # elsewhere.
-HSR_LABEL_FULL = 'federal antitrust clearance deadline (Hart-Scott-Rodino / "HSR")'
-HSR_LABEL = "federal antitrust clearance deadline"
+HSR_LABEL_FULL = 'antitrust clearance deadline (Hart-Scott-Rodino / "HSR")'
+HSR_LABEL = "antitrust clearance deadline"
 
 # monitor.log is append-only and committed back to the repo every run, so cap it
 # to the most recent LOG_MAX_LINES lines to keep the repo from bloating over time.
