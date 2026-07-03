@@ -83,6 +83,12 @@ PROCEEDING_HSR_DEADLINE = "2026-09-15"  # DOJ HSR antitrust clearance expiry
 STANDARD_COMMENT_DAYS = 20              # Rule 14.3 default comment period
 REPLY_COMMENT_DAYS = 5                  # Rule 14.3 reply-comment window
 
+# How that deadline is described in alerts. "HSR" is legal jargon, so lead with
+# plain language; spell out Hart-Scott-Rodino once (FULL), use the short form
+# elsewhere.
+HSR_LABEL_FULL = 'federal antitrust clearance deadline (Hart-Scott-Rodino / "HSR")'
+HSR_LABEL = "federal antitrust clearance deadline"
+
 # monitor.log is append-only and committed back to the repo every run, so cap it
 # to the most recent LOG_MAX_LINES lines to keep the repo from bloating over time.
 LOG_MAX_LINES = 5000
@@ -850,7 +856,9 @@ def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
         f"(both windows must fully expire; no walk-on for this proceeding type)",
     ]
     if pre_hsr:
-        lines.append(f"- Voting meetings before the HSR deadline ({_fmt_date(hsr)}):")
+        lines.append(
+            f"- Voting meetings before the {HSR_LABEL_FULL} ({_fmt_date(hsr)}):"
+        )
         for d in pre_hsr:
             ok = d > reply_end
             lines.append(
@@ -859,16 +867,17 @@ def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
             )
     if viable is None or viable > hsr:
         lines.append(
-            f"** TIMELINE RISK: no scheduled voting meeting on/before the HSR "
-            f"deadline ({_fmt_date(hsr)}) falls after the comment/reply window. "
+            f"** TIMELINE RISK: no scheduled voting meeting on/before the "
+            f"{HSR_LABEL} ({_fmt_date(hsr)}) falls after the comment/reply window. "
             + (f"Earliest possible meeting is {_fmt_date(viable)}"
                if viable else "No scheduled meeting qualifies")
-            + " — the transaction may lose HSR clearance before the CPUC can vote. **"
+            + " — the transaction may lose antitrust clearance before the CPUC "
+            "can vote. **"
         )
     else:
         lines.append(
             f"** Earliest viable voting meeting: {_fmt_date(viable)} "
-            f"(before the {_fmt_date(hsr)} HSR deadline). **"
+            f"(before the {_fmt_date(hsr)} {HSR_LABEL}). **"
         )
     lines.append(
         "(Dates are calendar-day estimates; a deadline landing on a weekend or "
@@ -898,7 +907,7 @@ def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
     ]
     if pre_hsr:
         hs.append(
-            f"<li>Voting meetings before the HSR deadline "
+            f"<li>Voting meetings before the {html.escape(HSR_LABEL_FULL)} "
             f"({html.escape(_fmt_date(hsr))}):<ul>"
         )
         for d in pre_hsr:
@@ -915,18 +924,19 @@ def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
     if viable is None or viable > hsr:
         hs.append(
             f'<p style="color:#b00020"><b>⚠ TIMELINE RISK:</b> no scheduled '
-            f"voting meeting on/before the HSR deadline "
+            f"voting meeting on/before the {html.escape(HSR_LABEL)} "
             f"({html.escape(_fmt_date(hsr))}) falls after the comment/reply "
             f"window. "
             + (f"Earliest possible meeting is <b>{html.escape(_fmt_date(viable))}</b>"
                if viable else "No scheduled meeting qualifies")
-            + " — the transaction may lose HSR clearance before the CPUC can vote.</p>"
+            + " — the transaction may lose antitrust clearance before the CPUC "
+            "can vote.</p>"
         )
     else:
         hs.append(
             f"<p><b>Earliest viable voting meeting: "
             f"{html.escape(_fmt_date(viable))}</b> (before the "
-            f"{html.escape(_fmt_date(hsr))} HSR deadline).</p>"
+            f"{html.escape(_fmt_date(hsr))} {html.escape(HSR_LABEL)}).</p>"
         )
     hs.append(
         "<p><i>Dates are calendar-day estimates; a deadline on a weekend or "

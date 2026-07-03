@@ -135,9 +135,12 @@ by a fixed peak window (`agenda_interval(days_until, frequent)`):
     Alternate PD if parties stipulate; flagged as unusual/emergency for a PD).
   It then computes comment-end, reply-end, the earliest agendizable date, marks
   each config voting meeting VIABLE/NOT, and flags **TIMELINE RISK** if no
-  scheduled meeting on/before the HSR deadline falls after the window. Dates are
-  calendar-day estimates (Rule 1.15 weekend/holiday roll noted); the PD text and
-  Daily Calendar are authoritative. Never raises — failures degrade to labelled
+  scheduled meeting on/before the antitrust-clearance deadline falls after the
+  window. That deadline is described in plain language in the emails
+  (`HSR_LABEL` / `HSR_LABEL_FULL`: "federal antitrust clearance deadline
+  (Hart-Scott-Rodino / HSR)") since "HSR" is jargon. Dates are calendar-day
+  estimates (Rule 1.15 weekend/holiday roll noted); the PD text and Daily
+  Calendar are authoritative. Never raises — failures degrade to labelled
   assumptions.
 - **State isolation:** lives under the `proceeding` key and is **preserved across
   meeting resets** (captured in `main()` before `select_target_meeting()` may
