@@ -94,3 +94,7 @@
 [2026-07-02 18:38:18 PDT] Proceeding A2507016: could not read Proposed Decision PDF for timeline: HTTPError('404 Client Error: Not Found for url: https://docs.cpuc.ca.gov/PublishedDocs/Published/G000/M620/K333/620333444.PDF')
 [2026-07-02 18:38:18 PDT] Email: sent via Brevo to 1 recipient(s).
 [2026-07-02 18:38:18 PDT] TEST_ALERT: sample alert sent successfully.
+[2026-07-02 18:47:23 PDT] TEST_ALERT=proceeding — sending a sample alert email and exiting.
+[2026-07-02 18:47:28 PDT] Proceeding A2507016: could not read Proposed Decision PDF for timeline: HTTPError('404 Client Error: Not Found for url: https://docs.cpuc.ca.gov/PublishedDocs/Published/G000/M620/K333/620333444.PDF')
+[2026-07-02 18:47:29 PDT] Email: sent via Brevo to 1 recipient(s).
+[2026-07-02 18:47:29 PDT] TEST_ALERT: sample alert sent successfully.
