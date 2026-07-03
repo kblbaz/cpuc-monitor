@@ -21,9 +21,10 @@ to be on.
 7. [Updating meeting dates](#updating-meeting-dates-and-agenda-numbers)
 8. [Reading the log](#reading-the-log)
 9. [Testing locally (optional)](#testing-locally-optional)
-10. [How the smart schedule works](#how-the-smart-schedule-works)
-11. [Troubleshooting](#troubleshooting)
-12. [Appendix: running on PythonAnywhere instead](#appendix-running-on-pythonanywhere-instead)
+10. [Manual runs & debug options](#manual-runs--debug-options)
+11. [How the smart schedule works](#how-the-smart-schedule-works)
+12. [Troubleshooting](#troubleshooting)
+13. [Appendix: running on PythonAnywhere instead](#appendix-running-on-pythonanywhere-instead)
 
 ---
 
@@ -149,6 +150,11 @@ Your credentials live as encrypted **repository secrets**, never in the code.
 
 Names must match **exactly** (they're case-sensitive).
 
+**Optional:** add a `TEST_RECIPIENT` secret (a single email). When set, the
+test/preview/update emails go **only** there instead of the full `ALERT_EMAIL`
+list — handy for previewing without emailing everyone. See
+[Manual runs & debug options](#manual-runs--debug-options).
+
 ---
 
 ## Step 4 — Turn on the schedule
@@ -245,6 +251,28 @@ python monitor.py
 `.env` is gitignored, so it never leaves your machine. To force a real check for
 testing, temporarily set a meeting `date` in `config.json` to ~10 days from
 today and delete `last_seen.json` (it will be recreated).
+
+---
+
+## Manual runs & debug options
+
+From the **Actions** tab → **CPUC Meeting Monitor** → **Run workflow**, you can
+trigger any of these (they skip monitoring and exit). Locally, set the matching
+environment variable instead.
+
+| Run-workflow option | Env var | What it does |
+|---|---|---|
+| *(nothing selected)* | — | Normal monitoring run |
+| Send a test email | `TEST_EMAIL=1` | Sends the "You're Subscribed!" welcome email |
+| Send the one-time 'Update' announcement | `SEND_UPDATE=1` | Sends the "CPUC Meeting Monitor - Update" announcement |
+| Debug: send a sample alert email | `TEST_ALERT=<kind>` | Previews a real alert (`agenda`, `agenda-notfound`, `agenda-undetermined`, `holdlist`, `proceeding`, `alternate`) |
+| Debug: agenda PDF URL | `TEST_AGENDA_PDF=<url>` | Logs whether A2507016 appears in that agenda PDF (no email) |
+
+**Who receives them:** the optional **`TEST_RECIPIENT`** secret controls it. When
+set, the test/preview/update emails go **only** to that address; when unset, they
+go to the full `ALERT_EMAIL` list. Real agenda/hold-list/Proposed-Decision alerts
+always go to the full list. So to send the Update to everyone, remove
+`TEST_RECIPIENT`, run it, then re-add the secret.
 
 ---
 
