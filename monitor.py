@@ -802,47 +802,47 @@ def pd_schedule(entry: dict, now: datetime, kind: str = "proposed_decision") -> 
         comment_days, snippet = extract_comment_period_days(pd_text)
         waived = reply_comments_waived(pd_text)
         comment_waived = comment_period_waived(pd_text)
-        rule143 = bool(re.search(r"rule\s*14\.3", pd_text, re.IGNORECASE))
+        rule143 = bool(re.search(r"rule\s*14\s*\.\s*3", pd_text, re.IGNORECASE))
 
-    # Comment period. An explicit number (usually a reduction) is flagged
-    # "BUT VERIFY"; a bare Rule 14.3 reference deterministically means the 20-day
-    # standard; otherwise fall back to 20.
+    # Comment period. On any readable PD something is always stated — an explicit
+    # number (usually a reduction, flagged "BUT VERIFY") or, in the standard case,
+    # a Rule 14.3 reference that means 20 days. The final branch therefore only
+    # happens when the document couldn't be read/parsed.
     if comment_waived:
         comment_days_used = 0
         comment_note = (
-            "WAIVED — all parties stipulated (detected) — BUT VERIFY" if is_alt else
+            "WAIVED — all parties stipulated (stated in the document) — BUT VERIFY"
+            if is_alt else
             "appears WAIVED — unusual for a Proposed Decision (emergency only) "
             "— BUT VERIFY"
         )
     elif comment_days is not None:
         comment_days_used = comment_days
-        comment_note = "detected in the document — BUT VERIFY"
+        comment_note = "stated in the document — BUT VERIFY"
     elif rule143:
         comment_days_used = STANDARD_COMMENT_DAYS
-        comment_note = (
-            f"detected via Rule 14.3 reference, which sets the standard "
-            f"{STANDARD_COMMENT_DAYS} days"
-        )
+        comment_note = "per Rule 14.3 cited in the document — the standard period"
     else:
         comment_days_used = STANDARD_COMMENT_DAYS
         comment_note = (
-            f"not stated and no Rule 14.3 reference found — assuming the "
-            f"{STANDARD_COMMENT_DAYS}-day standard; VERIFY"
+            "couldn't confirm from the document — using the standard; please verify"
         )
 
-    # Reply comments. Same idea: detected values flagged "BUT VERIFY"; a Rule 14.3
-    # reference implies the standard 5 days; otherwise assumed.
+    # Reply comments follow the same pattern.
     if waived is True:
-        reply_desc = "WAIVED by the ALJ (detected) — BUT VERIFY"
+        reply_desc = "WAIVED by the ALJ (stated in the document) — BUT VERIFY"
         reply_days_used = 0
     elif waived is False:
-        reply_desc = f"{REPLY_COMMENT_DAYS} days (detected in the document) — BUT VERIFY"
+        reply_desc = f"{REPLY_COMMENT_DAYS} days (stated in the document) — BUT VERIFY"
         reply_days_used = REPLY_COMMENT_DAYS
     elif rule143:
-        reply_desc = f"{REPLY_COMMENT_DAYS} days per Rule 14.3 (standard)"
+        reply_desc = f"{REPLY_COMMENT_DAYS} days — the standard, per Rule 14.3"
         reply_days_used = REPLY_COMMENT_DAYS
     else:
-        reply_desc = f"{REPLY_COMMENT_DAYS} days assumed (standard; not detected) — VERIFY"
+        reply_desc = (
+            f"{REPLY_COMMENT_DAYS} days — couldn't confirm from the document; "
+            f"using the standard, please verify"
+        )
         reply_days_used = REPLY_COMMENT_DAYS
 
     # Calendar-day math, then roll each deadline off weekends/holidays (Rule
@@ -904,7 +904,7 @@ def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
 
     # ---- plain text ----
     lines = [
-        "WHAT HAPPENS NEXT (Procedural Timeline — CPUC Rules of Practice & Procedure):",
+        "What Happens Next (Procedural Timeline — CPUC Rules of Practice & Procedure):",
         f"- {doctype} issued: {_fmt_date(issued)}"
         + (" (assumed = detection date; not found in doc)" if issued_assumed else ""),
         comment_line,
@@ -947,7 +947,7 @@ def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
     # ---- HTML ----
     hs = [
         "<p style='margin:18px 0 8px;padding-top:12px;border-top:1px solid #dddddd'>"
-        "<b>What happens next</b> "
+        "<b>What Happens Next</b> "
         "<span style='color:#777777'>(Procedural Timeline — CPUC Rules of "
         "Practice &amp; Procedure)</span></p>"
         "<ul style='margin:10px 0;padding-left:22px'>",

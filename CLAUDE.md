@@ -126,13 +126,13 @@ by a fixed peak window (`agenda_interval(days_until, frequent)`):
     `STANDARD_COMMENT_DAYS`=20 if not found). NOTE from inspecting real CPUC PDs:
     a standard PD does **not** restate a day count — it says "parties of record
     may file comments on the proposed decision **as provided in Rule 14.3**",
-    incorporating the 20-day default by reference. So the note wording reflects
-    three cases: an **explicit number** (usually a reduction) → "detected in the
-    document — BUT VERIFY"; a bare **Rule 14.3 reference** (detected via
-    `rule\s*14\.3`) → "detected via Rule 14.3 reference, which sets the standard
-    20 days" (confident); **neither** → "assuming the 20-day standard; VERIFY".
-    Reply comments follow the same pattern (detected or waived → BUT VERIFY;
-    Rule 14.3 → 5 days standard; else assumed),
+    incorporating the 20-day default by reference. Since a readable PD always
+    states *something*, the note wording reflects: an **explicit number** (usually
+    a reduction) → "stated in the document — BUT VERIFY"; a bare **Rule 14.3
+    reference** → "per Rule 14.3 cited in the document — the standard period"
+    (confident, = 20 days); **neither** (only when the PDF couldn't be read) →
+    "couldn't confirm from the document — using the standard; please verify".
+    Reply comments follow the same pattern,
   - whether reply comments are waived (`reply_comments_waived`; else
     `REPLY_COMMENT_DAYS`=5),
   - whether the comment period is waived (`comment_period_waived` — valid for an
