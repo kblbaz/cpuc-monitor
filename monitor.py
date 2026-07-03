@@ -772,37 +772,51 @@ def pd_schedule(entry: dict, now: datetime, kind: str = "proposed_decision") -> 
     except Exception as exc:
         log(f"Proceeding {PROCEEDING_ID}: could not read {doctype} PDF for timeline: {exc!r}")
 
-    comment_days, snippet, waived, comment_waived = None, None, None, False
+    comment_days, snippet, waived, comment_waived, rule143 = None, None, None, False, False
     if pd_text.strip():
         comment_days, snippet = extract_comment_period_days(pd_text)
         waived = reply_comments_waived(pd_text)
         comment_waived = comment_period_waived(pd_text)
+        rule143 = bool(re.search(r"rule\s*14\.3", pd_text, re.IGNORECASE))
 
+    # Comment period. An explicit number (usually a reduction) is flagged
+    # "BUT VERIFY"; a bare Rule 14.3 reference deterministically means the 20-day
+    # standard; otherwise fall back to 20.
     if comment_waived:
         comment_days_used = 0
         comment_note = (
-            "WAIVED (all parties stipulated); VERIFY in the document" if is_alt else
-            "appears WAIVED — unusual for a PD (allowed only in a genuine "
-            "emergency); VERIFY in the document"
+            "WAIVED — all parties stipulated (detected) — BUT VERIFY" if is_alt else
+            "appears WAIVED — unusual for a PD (emergency only) — BUT VERIFY"
         )
-    elif comment_days is None:
+    elif comment_days is not None:
+        comment_days_used = comment_days
+        comment_note = "detected in the document — BUT VERIFY"
+    elif rule143:
         comment_days_used = STANDARD_COMMENT_DAYS
         comment_note = (
-            f"NOT auto-detected — assuming the {STANDARD_COMMENT_DAYS}-day "
-            f"standard; VERIFY in the document"
+            f"detected via Rule 14.3 reference, which sets the standard "
+            f"{STANDARD_COMMENT_DAYS} days"
         )
     else:
-        comment_days_used = comment_days
-        comment_note = "as stated in the document" + (f' ({snippet})' if snippet else "")
+        comment_days_used = STANDARD_COMMENT_DAYS
+        comment_note = (
+            f"not stated and no Rule 14.3 reference found — assuming the "
+            f"{STANDARD_COMMENT_DAYS}-day standard; VERIFY"
+        )
 
+    # Reply comments. Same idea: detected values flagged "BUT VERIFY"; a Rule 14.3
+    # reference implies the standard 5 days; otherwise assumed.
     if waived is True:
-        reply_desc = "WAIVED by the ALJ"
+        reply_desc = "WAIVED by the ALJ (detected) — BUT VERIFY"
         reply_days_used = 0
     elif waived is False:
-        reply_desc = f"{REPLY_COMMENT_DAYS} days (applies)"
+        reply_desc = f"{REPLY_COMMENT_DAYS} days (detected in the document) — BUT VERIFY"
+        reply_days_used = REPLY_COMMENT_DAYS
+    elif rule143:
+        reply_desc = f"{REPLY_COMMENT_DAYS} days per Rule 14.3 (standard)"
         reply_days_used = REPLY_COMMENT_DAYS
     else:
-        reply_desc = f"{REPLY_COMMENT_DAYS} days (standard — waiver not detected; VERIFY)"
+        reply_desc = f"{REPLY_COMMENT_DAYS} days assumed (standard; not detected) — VERIFY"
         reply_days_used = REPLY_COMMENT_DAYS
 
     comment_end = issued + timedelta(days=comment_days_used)
