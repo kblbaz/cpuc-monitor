@@ -83,11 +83,10 @@ PROCEEDING_HSR_DEADLINE = "2026-09-15"  # DOJ HSR antitrust clearance expiry
 STANDARD_COMMENT_DAYS = 20              # Rule 14.3 default comment period
 REPLY_COMMENT_DAYS = 5                  # Rule 14.3 reply-comment window
 
-# How that deadline is described in alerts. "HSR" is legal jargon, so lead with
-# plain language; spell out Hart-Scott-Rodino once (FULL), use the short form
-# elsewhere.
-HSR_LABEL_FULL = 'antitrust clearance deadline (Hart-Scott-Rodino / "HSR")'
+# How that deadline is described in alerts. Kept simple/generic — recipients
+# don't need the "HSR"/Hart-Scott-Rodino jargon.
 HSR_LABEL = "antitrust clearance deadline"
+HSR_LABEL_FULL = HSR_LABEL
 
 # monitor.log is append-only and committed back to the repo every run, so cap it
 # to the most recent LOG_MAX_LINES lines to keep the repo from bloating over time.
@@ -921,32 +920,35 @@ def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
 
     # ---- HTML ----
     hs = [
-        "<p><b>What happens next</b> (procedural timeline — CPUC Rules of "
-        "Practice &amp; Procedure):</p><ul>",
-        f"<li>{html.escape(doctype)} issued: <b>{html.escape(_fmt_date(issued))}</b>"
+        "<p style='margin:18px 0 8px;padding-top:12px;border-top:1px solid #dddddd'>"
+        "<b>What happens next</b> "
+        "<span style='color:#777777'>(procedural timeline — CPUC Rules of "
+        "Practice &amp; Procedure)</span></p>"
+        "<ul style='margin:10px 0;padding-left:22px'>",
+        f"<li style='margin-bottom:7px;line-height:1.45'>{html.escape(doctype)} issued: <b>{html.escape(_fmt_date(issued))}</b>"
         + (" (assumed = detection date)" if issued_assumed else "") + "</li>",
-        (f"<li>Comment period: <b>{html.escape(comment_note)}</b> &rarr; no "
+        (f"<li style='margin-bottom:7px;line-height:1.45'>Comment period: <b>{html.escape(comment_note)}</b> &rarr; no "
          f"comment period</li>"
          if comment_days_used == 0 else
-         f"<li>Comment period: <b>{comment_days_used} days</b> "
+         f"<li style='margin-bottom:7px;line-height:1.45'>Comment period: <b>{comment_days_used} days</b> "
          f"({html.escape(comment_note)}) &rarr; comments due "
          f"<b>{html.escape(_fmt_date(comment_end))}</b></li>"),
-        f"<li>Reply comments: <b>{html.escape(reply_desc)}</b>"
+        f"<li style='margin-bottom:7px;line-height:1.45'>Reply comments: <b>{html.escape(reply_desc)}</b>"
         + ("" if waived is True else
            f" &rarr; due <b>{html.escape(_fmt_date(reply_end))}</b>") + "</li>",
-        f"<li>Earliest the item can be agendized: <b>after "
+        f"<li style='margin-bottom:7px;line-height:1.45'>Earliest the item can be agendized: <b>after "
         f"{html.escape(_fmt_date(reply_end))}</b> ({html.escape(windows_phrase)}; "
         f"no walk-on for this proceeding type)</li>",
     ]
     if pre_hsr:
         hs.append(
-            f"<li>Voting meetings before the {html.escape(HSR_LABEL_FULL)} "
-            f"({html.escape(_fmt_date(hsr))}):<ul>"
+            f"<li style='margin-bottom:7px;line-height:1.45'>Voting meetings before the {html.escape(HSR_LABEL_FULL)} "
+            f"({html.escape(_fmt_date(hsr))}):<ul style='margin:10px 0;padding-left:22px'>"
         )
         for d in pre_hsr:
             ok = d > reply_end
             hs.append(
-                f"<li>{html.escape(_fmt_date(d))}: <b>"
+                f"<li style='margin-bottom:7px;line-height:1.45'>{html.escape(_fmt_date(d))}: <b>"
                 + ("VIABLE" if ok else "NOT viable")
                 + "</b>"
                 + ("" if ok else f" (window closes {html.escape(_fmt_date(reply_end))})")
@@ -956,7 +958,9 @@ def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
     hs.append("</ul>")
     if viable is None or viable > hsr:
         hs.append(
-            f'<p style="color:#b00020"><b>⚠ TIMELINE RISK:</b> no scheduled '
+            "<p style='margin:12px 0;padding:10px 12px;background:#fdecea;"
+            "border-left:4px solid #b00020;color:#b00020'>"
+            "<b>⚠ TIMELINE RISK:</b> no scheduled "
             f"voting meeting on/before the {html.escape(HSR_LABEL)} "
             f"({html.escape(_fmt_date(hsr))}) falls after the comment/reply "
             f"window. "
@@ -967,15 +971,16 @@ def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
         )
     else:
         hs.append(
-            f"<p><b>Earliest viable voting meeting: "
-            f"{html.escape(_fmt_date(viable))}</b> (before the "
-            f"{html.escape(_fmt_date(hsr))} {html.escape(HSR_LABEL)}).</p>"
+            "<p style='margin:12px 0;padding:10px 12px;background:#eaf5ea;"
+            "border-left:4px solid #2e7d32'>"
+            f"<b>Earliest viable voting meeting: {html.escape(_fmt_date(viable))}</b> "
+            f"(before the {html.escape(_fmt_date(hsr))} {html.escape(HSR_LABEL)}).</p>"
         )
     hs.append(
-        "<p><i>Dates are calendar-day estimates; a deadline on a weekend or "
-        "holiday rolls to the next business day per CPUC Rule 1.15. The PD text "
-        "and CPUC Daily Calendar are authoritative — verify the extracted "
-        "values.</i></p>"
+        "<p style='font-size:12px;color:#777777;margin-top:14px'><i>Dates are "
+        "calendar-day estimates; a deadline on a weekend or holiday rolls to the "
+        "next business day per CPUC Rule 1.15. The PD text and CPUC Daily "
+        "Calendar are authoritative — verify the extracted values.</i></p>"
     )
     html_block = "".join(hs)
 
@@ -1411,10 +1416,10 @@ def main() -> int:
                     "Includes:</p>"
                     "<ul style=\"margin:0; padding-left:0; "
                     "list-style-position:inside\">"
-                    "<li>Voting meeting date and agenda number</li>"
-                    "<li>Direct link to the official PDF document</li>"
-                    "<li>CPUC publication date</li>"
-                    "<li>Date and time the monitor detected the new document "
+                    "<li style='margin-bottom:7px;line-height:1.45'>Voting meeting date and agenda number</li>"
+                    "<li style='margin-bottom:7px;line-height:1.45'>Direct link to the official PDF document</li>"
+                    "<li style='margin-bottom:7px;line-height:1.45'>CPUC publication date</li>"
+                    "<li style='margin-bottom:7px;line-height:1.45'>Date and time the monitor detected the new document "
                     "(Pacific Time)</li>"
                     "</ul>"
                     "<p>This concludes this test of the CPUC Voting Meeting "

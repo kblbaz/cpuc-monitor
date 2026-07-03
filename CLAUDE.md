@@ -118,9 +118,10 @@ by a fixed peak window (`agenda_interval(days_until, frequent)`):
   never merged with the agenda/hold-list emails.
 - **Procedural timeline (`build_pd_timeline_blocks()`):** for both a PD and an
   Alternate PD, the email downloads the document's PDF (`fetch_pdf_text`) and
-  reports the comment/reply windows and voting-meeting viability vs. the DOJ HSR
-  deadline (`PROCEEDING_HSR_DEADLINE`). It extracts, defensively and labelled
-  "VERIFY":
+  reports the comment/reply windows and voting-meeting viability vs. the
+  antitrust clearance deadline (the `PROCEEDING_HSR_DEADLINE` constant — kept
+  that internal name, but shown to recipients only as "antitrust clearance
+  deadline"). It extracts, defensively and labelled "VERIFY":
   - comment-period length (`extract_comment_period_days`; standard
     `STANDARD_COMMENT_DAYS`=20 if not found). NOTE from inspecting real CPUC PDs:
     a standard PD does **not** restate a day count — it says "parties of record
@@ -138,12 +139,12 @@ by a fixed peak window (`agenda_interval(days_until, frequent)`):
     Alternate PD if parties stipulate; flagged as unusual/emergency for a PD).
   It then computes comment-end, reply-end, the earliest agendizable date, marks
   each config voting meeting VIABLE/NOT, and flags **TIMELINE RISK** if no
-  scheduled meeting on/before the antitrust-clearance deadline falls after the
-  window. That deadline is described in plain language in the emails
-  (`HSR_LABEL` / `HSR_LABEL_FULL`: "federal antitrust clearance deadline
-  (Hart-Scott-Rodino / HSR)") since "HSR" is jargon. Dates are calendar-day
-  estimates (Rule 1.15 weekend/holiday roll noted); the PD text and Daily
-  Calendar are authoritative. Never raises — failures degrade to labelled
+  scheduled meeting on/before the antitrust clearance deadline falls after the
+  window. That deadline is shown to recipients simply as "antitrust clearance
+  deadline" (`HSR_LABEL`; the "HSR"/Hart-Scott-Rodino jargon is intentionally
+  omitted). Dates are calendar-day estimates (Rule 1.15 weekend/holiday roll
+  noted); the PD text and Daily Calendar are authoritative. Never raises —
+  failures degrade to labelled
   assumptions.
 - **State isolation:** lives under the `proceeding` key and is **preserved across
   meeting resets** (captured in `main()` before `select_target_meeting()` may

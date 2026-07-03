@@ -305,7 +305,7 @@ Alternate, the email also reads the document's PDF and works out what happens
 next: the comment-period length stated in the document, whether reply comments
 are waived, the earliest date the item can go on a voting agenda, which of the
 upcoming voting meetings is viable, and a **timeline-risk flag** if none is
-viable before the DOJ Hart-Scott-Rodino clearance deadline (Sept 15, 2026).
+viable before the antitrust clearance deadline (Sept 15, 2026).
 These are auto-extracted best-effort estimates labelled "verify" — the document
 itself and the CPUC Daily Calendar are authoritative.
 
