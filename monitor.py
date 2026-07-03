@@ -692,6 +692,9 @@ def extract_comment_period_days(pd_text: str):
     "N days" near comments.
     """
     t = re.sub(r"\s+", " ", pd_text).lower()
+    # Neutralize "reply comment(s)" so a reply-comment sentence (e.g. "reply
+    # comments within 5 days") is never matched as the initial comment period.
+    t = t.replace("reply comment", "reply_x")
     patterns = [
         r"comment period (?:of |is |shall be |will be )?(?:reduced|shortened)?(?: to)? (\d{1,3}) days",
         r"(?:reduc|shorten)\w*[^.]{0,50}?comment[^.]{0,30}?(\d{1,3}) days",
@@ -868,6 +871,12 @@ def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
             f"-> comments due {_fmt_date(comment_end)}"
         )
 
+    # "Earliest agendizable" phrasing depends on whether a reply window applies.
+    if waived is True:
+        windows_phrase = "the comment window must fully expire (reply comments waived)"
+    else:
+        windows_phrase = "both the comment and reply windows must fully expire"
+
     # ---- plain text ----
     lines = [
         "WHAT HAPPENS NEXT (procedural timeline — CPUC Rules of Practice & Procedure):",
@@ -877,7 +886,7 @@ def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
         f"- Reply comments: {reply_desc}"
         + ("" if waived is True else f" -> reply comments due {_fmt_date(reply_end)}"),
         f"- Earliest the item can be agendized: after {_fmt_date(reply_end)} "
-        f"(both windows must fully expire; no walk-on for this proceeding type)",
+        f"({windows_phrase}; no walk-on for this proceeding type)",
     ]
     if pre_hsr:
         lines.append(
@@ -926,8 +935,8 @@ def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
         + ("" if waived is True else
            f" &rarr; due <b>{html.escape(_fmt_date(reply_end))}</b>") + "</li>",
         f"<li>Earliest the item can be agendized: <b>after "
-        f"{html.escape(_fmt_date(reply_end))}</b> (both windows must fully "
-        f"expire; no walk-on for this proceeding type)</li>",
+        f"{html.escape(_fmt_date(reply_end))}</b> ({html.escape(windows_phrase)}; "
+        f"no walk-on for this proceeding type)</li>",
     ]
     if pre_hsr:
         hs.append(
