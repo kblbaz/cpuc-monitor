@@ -1492,7 +1492,7 @@ def main() -> int:
             send_email(
                 "CPUC Meeting Monitor - Update",
                 (
-                    "There's been a plot twist.\n\n"
+                    "There's been a plot twist!\n\n"
                     "The Commission cannot place the Charter Communications / "
                     "Cox merger (CPUC proceeding A2507016) on a voting meeting "
                     "agenda until the assigned Administrative Law Judge (ALJ) "
@@ -1535,7 +1535,7 @@ def main() -> int:
                 ),
                 config,
                 html_body=(
-                    "<p><b>There's been a plot twist.</b></p>"
+                    "<p><b>There's been a plot twist!</b></p>"
                     "<p>The Commission cannot place the <b>Charter "
                     "Communications / Cox merger</b> (CPUC proceeding A2507016) "
                     "on a voting meeting agenda until the assigned "
