@@ -903,7 +903,7 @@ def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
 
     # ---- plain text ----
     lines = [
-        "WHAT HAPPENS NEXT (procedural timeline — CPUC Rules of Practice & Procedure):",
+        "WHAT HAPPENS NEXT (Procedural Timeline — CPUC Rules of Practice & Procedure):",
         f"- {doctype} issued: {_fmt_date(issued)}"
         + (" (assumed = detection date; not found in doc)" if issued_assumed else ""),
         comment_line,
@@ -937,7 +937,7 @@ def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
             f"(before the {_fmt_date(hsr)} {HSR_LABEL}). **"
         )
     lines.append(
-        "(Deadlines are rolled off weekends and CA state holidays to the next "
+        "(Deadlines on weekends and CA State Holidays are rolled to the next "
         "business day per CPUC Rule 1.15. The PD text and CPUC Daily Calendar "
         "remain authoritative — verify the extracted values.)"
     )
@@ -947,7 +947,7 @@ def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
     hs = [
         "<p style='margin:18px 0 8px;padding-top:12px;border-top:1px solid #dddddd'>"
         "<b>What happens next</b> "
-        "<span style='color:#777777'>(procedural timeline — CPUC Rules of "
+        "<span style='color:#777777'>(Procedural Timeline — CPUC Rules of "
         "Practice &amp; Procedure)</span></p>"
         "<ul style='margin:10px 0;padding-left:22px'>",
         f"<li style='margin-bottom:7px;line-height:1.45'>{html.escape(doctype)} issued: <b>{html.escape(_fmt_date(issued))}</b>"
@@ -1002,8 +1002,8 @@ def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
             f"(before the {html.escape(_fmt_date(hsr))} {html.escape(HSR_LABEL)}).</p>"
         )
     hs.append(
-        "<p style='font-size:12px;color:#777777;margin-top:14px'><i>Deadlines are "
-        "rolled off weekends and CA state holidays to the next business day per "
+        "<p style='font-size:12px;color:#777777;margin-top:14px'><i>Deadlines on "
+        "weekends and CA State Holidays are rolled to the next business day per "
         "CPUC Rule 1.15. The PD text and CPUC Daily Calendar remain authoritative "
         "— verify the extracted values.</i></p>"
     )
