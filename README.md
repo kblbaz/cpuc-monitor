@@ -213,7 +213,7 @@ you always have a full history.
 
   ```
   [2026-07-06 09:07:14 PDT] Run start: target meeting 2026-07-16 (Agenda #3584), 10 days out.
-  [2026-07-06 09:07:14 PDT] Agenda: checking (10 days out, interval 3:00:00).
+  [2026-07-06 09:07:14 PDT] Agenda: checking (10 days out, interval 1 day, 0:00:00, pre-PD — daily).
   [2026-07-06 09:07:15 PDT] Agenda: latest is 'Current Meeting Agenda for July 16, 2026 (Agenda #3584)'.
   [2026-07-06 09:07:18 PDT] Agenda: CONFIRMED and alert sent. PDF: https://docs.cpuc.ca.gov/...pdf
   ```
@@ -253,17 +253,20 @@ today and delete `last_seen.json` (it will be recreated).
 All times are **Pacific**. GitHub triggers the script every 5 minutes; the
 script decides whether to actually check CPUC.
 
-**Phase 1 — Agenda**
-| Days before meeting | Action |
+**Phase 1 — Agenda** (cadence depends on whether A2507016 is agenda-eligible yet)
+| Situation | Action |
 |---|---|
-| More than 20 | Do nothing |
-| 16–20 | Check once per day (watching begins; agenda this early is unlikely) |
-| 8–15 | **Check every 5 minutes** — the peak zone |
-| 7 or fewer | Check every hour (safety net, in case it's late) |
+| More than 20 days before meeting | Do nothing |
+| Within 20 days, **before** A2507016 is agenda-eligible | Check **once per day** |
+| Within 20 days, **on/after** the eligibility date | Check **every 15 minutes** |
 
-The agenda must be published 10 days in advance, but CPUC's "10 days" may mean
-calendar days (~day 10) or business days (~day 14). The 8–15 day peak zone covers
-both interpretations.
+Why: the "~10 days before the meeting" agenda timing is **customary, not a rule**,
+and A2507016 cannot appear on a voting agenda until its Proposed Decision AND the
+comment/reply windows expire (the reply window is skipped if waived). So there's
+no point polling the agenda frequently until that eligibility date — which the
+monitor computes from the PD and stores. Once eligible, the agenda could publish
+at any point in the run-up, so we poll frequently and evenly rather than betting
+on a fixed day.
 
 When the Agenda for the target meeting is found → send Agenda email, mark it
 confirmed, and start Phase 2.

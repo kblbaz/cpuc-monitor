@@ -53,16 +53,24 @@ All timing is computed in **Pacific time** (`America/Los_Angeles`).
 "Due" = enough time has elapsed since `last_checked` for that phase.
 
 ### Phase 1 — Agenda monitoring
-The agenda must be published 10 days in advance, but CPUC's "10 days" may mean
-calendar days (~day 10) or business days (~day 14, up to 15 with a holiday), so
-the 5-minute peak zone spans the whole 8–15 day band to cover both.
+The "~10 days before the meeting" agenda-publication timing is **customary, not a
+rule**, so cadence is driven by whether A2507016 is **agenda-eligible** yet, not
+by a fixed peak window (`agenda_interval(days_until, frequent)`):
 - More than 20 days before meeting → do not check.
-- 16–20 days before → check once per day (watching begins; agenda this early is
-  unlikely).
-- 8–15 days before → check every 5 minutes (peak zone).
-- 7 days or fewer → check every hour (safety net, in case the agenda is late).
+- **Before A2507016 is agenda-eligible** → check **once per day**. It becomes
+  eligible only after its ALJ PD drops AND the comment period plus reply period
+  (unless waived) fully expire — until then it legally cannot be on any voting
+  agenda, so frequent polling is pointless.
+- **On/after the eligibility date** → check **every 15 minutes** uniformly across
+  the ≤20-day window (the agenda could publish at any point once eligible).
 - On detect + match to target meeting → send **Agenda** email,
   set `agenda.confirmed = true`, begin Phase 2.
+- Eligibility date = `proceeding.agenda_eligible_date`, computed by `pd_schedule()`
+  from the PD (comment_end + reply window; reply=0 if waived) and stored when the
+  PD/APD alert fires. It's the **latest** window-close across all detected
+  decisions (a later Alternate PD pushes it out), and persists across meeting
+  resets — so every subsequent meeting's agenda uses the frequent cadence once
+  eligible.
 - Before sending, the agenda **PDF text is extracted** (`fetch_pdf_text()` via
   `pypdf`) and searched for `PROCEEDING_ID`. The result is folded **into the same
   agenda email** (not a separate alert): it states whether A2507016 appears on
@@ -250,12 +258,14 @@ the meeting advances (`reset_state_for()` does not touch it).
   "current_meeting": { "date": "2026-07-16", "agenda_number": "3584" },
   "agenda":    { "confirmed": false, "pdf_url": null, "detected_at": null, "last_checked": null },
   "hold_list": { "confirmed": false, "pdf_url": null, "detected_at": null, "last_checked": null },
-  "proceeding": { "id": "A2507016", "last_checked": null, "detected_at": null, "seen": [] }
+  "proceeding": { "id": "A2507016", "last_checked": null, "detected_at": null, "agenda_eligible_date": null, "seen": [] }
 }
 ```
 
 `proceeding.seen` accumulates signatures (PDF url or a row-text hash) of entries
 already alerted on, so the same Proposed Decision listing never re-alerts.
+`proceeding.agenda_eligible_date` (set from the PD) gates the agenda cadence:
+daily until it passes, every 15 min after.
 
 ## Conventions
 

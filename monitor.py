@@ -100,6 +100,7 @@ SENDER_NAME = "CPUC Monitor"
 
 # Cadence windows (minimum time between checks).
 FIVE_MIN = timedelta(minutes=5)
+FIFTEEN_MIN = timedelta(minutes=15)
 HOUR = timedelta(hours=1)
 THREE_HOURS = timedelta(hours=3)
 ONE_DAY = timedelta(hours=24)
@@ -224,6 +225,7 @@ def fresh_proceeding_state() -> dict:
         "id": PROCEEDING_ID,
         "last_checked": None,
         "detected_at": None,
+        "agenda_eligible_date": None,  # set from the PD; gates agenda cadence
         "seen": [],
     }
 
@@ -698,29 +700,29 @@ def _fmt_date(d) -> str:
     return d.strftime("%B %d, %Y").replace(" 0", " ")
 
 
-def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
-                             kind: str = "proposed_decision"):
-    """Analyze a Proposed Decision / Alternate PD PDF and return (text_block,
-    html_block) describing the comment/reply windows, which voting meeting is
-    viable, and whether the HSR deadline is at risk. Never raises: on any failure
-    it returns a block stating what couldn't be determined and pointing to the
-    document. Extracted values are labelled 'verify' because the legal text varies.
+def pd_schedule(entry: dict, now: datetime, kind: str = "proposed_decision") -> dict:
+    """Read a PD / Alternate PD PDF and compute its comment/reply schedule.
 
-    Rule nuances handled by kind:
-      * ALJ PD  — comment period can be reduced but NOT waived (except a genuine
-        emergency), so a detected comment waiver is flagged as unusual.
-      * Alternate PD — comment period CAN be waived if all parties stipulate.
-      * Reply comments — can be waived on both.
+    Returns a dict of dates and labelled notes; never raises. `reply_end` is the
+    agenda-eligibility date — the proceeding cannot be placed on a voting agenda
+    until that date (the comment period and, unless waived, the reply period must
+    fully expire first).
+
+    Rule nuances by kind:
+      * ALJ PD — comment period may be reduced but NOT waived (except a genuine
+        emergency); a detected comment waiver is flagged as unusual.
+      * Alternate PD — comment period MAY be waived if all parties stipulate.
+      * Reply comments — MAY be waived on both.
     """
     is_alt = kind == "alternate"
     doctype = "Alternate Proposed Decision" if is_alt else "Proposed Decision"
 
-    pdf_url = entry.get("pdf_url")
     parsed_issued = _parse_us_date(entry.get("published_date"))
     issued = parsed_issued or now.date()
     issued_assumed = parsed_issued is None
 
     pd_text = ""
+    pdf_url = entry.get("pdf_url")
     try:
         if pdf_url and pdf_url.startswith("http"):
             pd_text = fetch_pdf_text(pdf_url)
@@ -735,13 +737,11 @@ def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
 
     if comment_waived:
         comment_days_used = 0
-        if is_alt:
-            comment_note = "WAIVED (all parties stipulated); VERIFY in the document"
-        else:
-            comment_note = (
-                "appears WAIVED — unusual for a PD (allowed only in a genuine "
-                "emergency); VERIFY in the document"
-            )
+        comment_note = (
+            "WAIVED (all parties stipulated); VERIFY in the document" if is_alt else
+            "appears WAIVED — unusual for a PD (allowed only in a genuine "
+            "emergency); VERIFY in the document"
+        )
     elif comment_days is None:
         comment_days_used = STANDARD_COMMENT_DAYS
         comment_note = (
@@ -764,6 +764,38 @@ def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
 
     comment_end = issued + timedelta(days=comment_days_used)
     reply_end = comment_end + timedelta(days=reply_days_used)
+
+    return {
+        "doctype": doctype,
+        "issued": issued,
+        "issued_assumed": issued_assumed,
+        "comment_days_used": comment_days_used,
+        "comment_note": comment_note,
+        "waived": waived,
+        "reply_desc": reply_desc,
+        "comment_end": comment_end,
+        "reply_end": reply_end,
+        "eligible_date": reply_end,  # earliest the item can be agendized
+    }
+
+
+def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
+                             kind: str = "proposed_decision"):
+    """Render (text_block, html_block) for the procedural timeline: comment/reply
+    windows, per-meeting viability, and HSR-deadline risk. Reuses a precomputed
+    entry['_schedule'] if present (avoids re-reading the PDF), else computes one.
+    Extracted values are labelled 'verify' because the legal text varies.
+    """
+    sched = entry.get("_schedule") or pd_schedule(entry, now, kind)
+    doctype = sched["doctype"]
+    issued = sched["issued"]
+    issued_assumed = sched["issued_assumed"]
+    comment_days_used = sched["comment_days_used"]
+    comment_note = sched["comment_note"]
+    waived = sched["waived"]
+    reply_desc = sched["reply_desc"]
+    comment_end = sched["comment_end"]
+    reply_end = sched["reply_end"]
 
     hsr = parse_iso_date(PROCEEDING_HSR_DEADLINE)
     meetings = sorted(parse_iso_date(m["date"]) for m in config.get("meetings", []))
@@ -989,18 +1021,21 @@ def is_due(last_checked, interval: timedelta, now: datetime) -> bool:
     return (now - prev) >= interval
 
 
-def agenda_interval(days_until: int):
-    """Required minimum interval for Phase 1, or None if outside the window."""
+def agenda_interval(days_until: int, frequent: bool = False):
+    """Required minimum interval for Phase 1 (agenda), or None if outside the
+    window. Eligibility-aware:
+
+    * Until A2507016 is agenda-eligible — i.e. its ALJ PD has dropped AND the
+      comment period plus the reply period (unless waived) have expired — the
+      proceeding legally cannot be placed on a voting agenda, so a once-a-day
+      agenda check is plenty (`frequent=False`).
+    * Once it is agenda-eligible, the agenda that carries A2507016 could publish
+      at any point in the run-up (the "~10 days before the meeting" timing is only
+      customary, not a rule), so poll frequently and uniformly (`frequent=True`).
+    """
     if days_until > 20:
         return None
-    if 16 <= days_until <= 20:
-        return ONE_DAY  # watching begins; agenda this early is unlikely
-    if 8 <= days_until <= 15:
-        # Peak zone: the agenda must be published 10 days in advance, but CPUC's
-        # "10 days" could mean calendar days (~day 10) or business days (~day 14,
-        # up to 15 with a holiday). Poll frequently across the whole band.
-        return FIVE_MIN
-    return HOUR  # day 7 and earlier: hourly safety net (agenda is overdue)
+    return FIFTEEN_MIN if frequent else ONE_DAY
 
 
 def hold_list_interval(days_until: int) -> timedelta:
@@ -1016,19 +1051,32 @@ def run_phase_agenda(state, target, config, now, days_until) -> bool:
     if state["agenda"]["confirmed"]:
         return True
 
-    interval = agenda_interval(days_until)
+    # Cadence depends on whether A2507016 is agenda-eligible yet: daily until its
+    # comment/reply windows close (it can't be agendized before then), frequent
+    # after. The eligibility date is computed and stored when the PD is detected.
+    elig_str = state.get("proceeding", {}).get("agenda_eligible_date")
+    eligible = parse_iso_date(elig_str) if elig_str else None
+    frequent = eligible is not None and now.date() >= eligible
+    if frequent:
+        pd_note = "A2507016 agenda-eligible — frequent"
+    elif eligible is not None:
+        pd_note = f"A2507016 windows open until {eligible} — daily"
+    else:
+        pd_note = "pre-PD — daily"
+
+    interval = agenda_interval(days_until, frequent)
     if interval is None:
-        log(f"Agenda: {days_until} days out (>12) — not checking yet.")
+        log(f"Agenda: {days_until} days out (>20) — not checking yet.")
         return False
 
     if not is_due(state["agenda"]["last_checked"], interval, now):
         log(
-            f"Agenda: not due yet ({days_until} days out, "
-            f"interval {interval}). Last checked {state['agenda']['last_checked']}."
+            f"Agenda: not due yet ({days_until} days out, interval {interval}, "
+            f"{pd_note}). Last checked {state['agenda']['last_checked']}."
         )
         return False
 
-    log(f"Agenda: checking ({days_until} days out, interval {interval}).")
+    log(f"Agenda: checking ({days_until} days out, interval {interval}, {pd_note}).")
     state["agenda"]["last_checked"] = now.isoformat()
 
     try:
@@ -1176,6 +1224,10 @@ def run_proceeding_watch(state, config, now) -> None:
     labels = {"alternate": "Alternate Proposed Decision", "proposed_decision": "Proposed Decision"}
     sent_any = False
     for kind, entries in by_kind.items():
+        # Precompute each doc's schedule once: reused by the email builder (no
+        # re-reading the PDF) and used to update the agenda-eligibility date.
+        for r in entries:
+            r["_schedule"] = pd_schedule(r, now, kind)
         subject, body, html_body = build_proceeding_email(entries, now, kind=kind, config=config)
         try:
             send_email(subject, body, config, html_body=html_body)
@@ -1187,6 +1239,18 @@ def run_proceeding_watch(state, config, now) -> None:
             continue  # leave these unseen so they retry next run
         for r in entries:
             seen.append(proceeding_signature(r))
+            # Track the LATEST window-close date across all detected decisions:
+            # the item stays agenda-ineligible until every pending window expires.
+            elig = r["_schedule"].get("eligible_date")
+            if elig:
+                cur = pstate.get("agenda_eligible_date")
+                cur_d = parse_iso_date(cur) if cur else None
+                if cur_d is None or elig > cur_d:
+                    pstate["agenda_eligible_date"] = elig.isoformat()
+                    log(
+                        f"Proceeding {PROCEEDING_ID}: agenda-eligibility date set "
+                        f"to {elig.isoformat()} (agenda cadence stays daily until then)."
+                    )
         sent_any = True
         log(
             f"Proceeding {PROCEEDING_ID}: ALERT sent for {len(entries)} new "
