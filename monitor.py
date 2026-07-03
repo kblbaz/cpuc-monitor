@@ -649,11 +649,22 @@ def _parse_us_date(value):
 def extract_comment_period_days(pd_text: str):
     """Best-effort: the comment-period length (in days) stated on the PD's face,
     plus a short surrounding snippet for human verification. (None, None) if not
-    found. The ALJ may reduce the standard 20 days, so we read it from the doc."""
+    found.
+
+    NOTE (from inspecting real CPUC PDs): a *standard* PD does NOT restate a day
+    count — it says "parties of record may file comments on the proposed decision
+    as provided in Rule 14.3", incorporating the 20-day default by reference. So a
+    no-match here is the common case and the caller's 20-day fallback is correct.
+    An explicit number generally appears only when the ALJ REDUCES the period, so
+    the patterns below target reduction/shortening language plus any explicit
+    "N days" near comments.
+    """
     t = re.sub(r"\s+", " ", pd_text).lower()
     patterns = [
-        r"comment period (?:of |is |shall be |will be )?(?:reduced to )?(\d{1,3}) days",
-        r"(\d{1,3})[- ]day comment period",
+        r"comment period (?:of |is |shall be |will be )?(?:reduced|shortened)?(?: to)? (\d{1,3}) days",
+        r"(?:reduc|shorten)\w*[^.]{0,50}?comment[^.]{0,30}?(\d{1,3}) days",
+        r"comment[^.]{0,50}?(?:reduc|shorten)\w*[^.]{0,30}?(\d{1,3}) days",
+        r"(\d{1,3})[- ]day (?:comment period|period for public (?:review and )?comment)",
         r"comments?[^.]{0,80}?(?:within|not later than|no later than) (\d{1,3}) days",
         r"reduced[^.]{0,60}? to (\d{1,3}) days",
     ]

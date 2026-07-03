@@ -122,7 +122,13 @@ by a fixed peak window (`agenda_interval(days_until, frequent)`):
   deadline (`PROCEEDING_HSR_DEADLINE`). It extracts, defensively and labelled
   "VERIFY":
   - comment-period length (`extract_comment_period_days`; standard
-    `STANDARD_COMMENT_DAYS`=20 if not found),
+    `STANDARD_COMMENT_DAYS`=20 if not found). NOTE from inspecting real CPUC PDs:
+    a standard PD does **not** restate a day count — it says "parties of record
+    may file comments on the proposed decision **as provided in Rule 14.3**",
+    incorporating the 20-day default by reference. So a no-match is the common
+    case and the 20-day fallback is correct; an explicit number generally appears
+    only when the ALJ **reduces** the period (the extractor targets that
+    reduction/"N-day" language),
   - whether reply comments are waived (`reply_comments_waived`; else
     `REPLY_COMMENT_DAYS`=5),
   - whether the comment period is waived (`comment_period_waived` — valid for an
