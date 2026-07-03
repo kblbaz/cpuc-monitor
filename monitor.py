@@ -498,15 +498,24 @@ def agenda_mentions_proceeding(pdf_url):
 # --------------------------------------------------------------------------
 # Email
 # --------------------------------------------------------------------------
-def _text_to_html(text: str) -> str:
-    """Wrap a plain-text body as HTML, preserving line breaks and the aligned
-    spacing (via white-space:pre-wrap). Used to guarantee every email has an HTML
-    part even when the caller supplies only text."""
+# One clean, email-safe font for every message. Many clients default HTML email
+# to a serif (e.g. Times New Roman); this keeps all alerts/tests consistent.
+EMAIL_FONT_STACK = "Arial, Helvetica, sans-serif"
+
+
+def _wrap_html(inner_html: str) -> str:
+    """Wrap email HTML in a container that sets the standard font. Applied to
+    every email (rich HTML and the plain-text fallback alike)."""
     return (
-        '<div style="font-family:Arial,Helvetica,sans-serif;white-space:pre-wrap">'
-        + html.escape(text)
-        + "</div>"
+        f'<div style="font-family:{EMAIL_FONT_STACK};font-size:14px;'
+        f'line-height:1.5;color:#222222">{inner_html}</div>'
     )
+
+
+def _text_to_html(text: str) -> str:
+    """Plain-text -> HTML fallback: escape and keep line breaks. Font comes from
+    the _wrap_html() container. Used when a caller supplies only text."""
+    return html.escape(text).replace("\n", "<br>")
 
 
 def send_email(subject: str, body: str, config: dict, html_body: str = None,
@@ -546,9 +555,10 @@ def send_email(subject: str, body: str, config: dict, html_body: str = None,
         "bcc": [{"email": addr} for addr in recipients],
         "subject": subject,
         "textContent": body,
-        # Always include an HTML part (generated from the text if not supplied),
-        # so every email is HTML with a plain-text fallback.
-        "htmlContent": html_body or _text_to_html(body),
+        # Always include an HTML part (generated from the text if not supplied)
+        # wrapped in the standard font, so every email is HTML (clean, consistent
+        # font) with a plain-text fallback.
+        "htmlContent": _wrap_html(html_body or _text_to_html(body)),
     }
     headers = {
         "api-key": api_key,

@@ -215,9 +215,12 @@ a secondary confirmation, not a strict requirement.
   `YAHOO_APP_PASSWORD` is no longer used. `BREVO_API_KEY` starts with `xkeysib-`.
 - **Every email is HTML with a plain-text fallback, by default.** `send_email()`
   always sets both `textContent` and `htmlContent`; if a caller doesn't pass
-  `html_body`, one is generated from the text via `_text_to_html()`
-  (white-space:pre-wrap). So real alerts and every `TEST_*` path are HTML+text
-  without each call site having to remember. `build_email()` and
+  `html_body`, one is generated from the text via `_text_to_html()` (escaped,
+  newlines→`<br>`). Every email's HTML is then wrapped by `_wrap_html()` in a
+  standard font (`EMAIL_FONT_STACK` = Arial/Helvetica/sans-serif) so all
+  messages render consistently (clients otherwise default to a serif). So real
+  alerts and every `TEST_*` path are HTML+text without each call site having to
+  remember. `build_email()` and
   `build_proceeding_email()` return `(subject, text_body, html_body)` with rich
   HTML. Scraped fields are `html.escape()`d (CPUC titles contain `&`, e.g.
   "PG&E"). The proceeding is shown as `A2507016 (Charter/Cox)` everywhere via
