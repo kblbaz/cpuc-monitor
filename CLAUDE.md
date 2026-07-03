@@ -108,6 +108,23 @@ the 5-minute peak zone spans the whole 8–15 day band to cover both.
   The Alternate alert's subject/body explain it's a Commissioner's alternate to
   the ALJ's decision. Each carries the title, date posted, and direct PDF link —
   never merged with the agenda/hold-list emails.
+- **Procedural timeline (`build_pd_timeline_blocks()`):** for both a PD and an
+  Alternate PD, the email downloads the document's PDF (`fetch_pdf_text`) and
+  reports the comment/reply windows and voting-meeting viability vs. the DOJ HSR
+  deadline (`PROCEEDING_HSR_DEADLINE`). It extracts, defensively and labelled
+  "VERIFY":
+  - comment-period length (`extract_comment_period_days`; standard
+    `STANDARD_COMMENT_DAYS`=20 if not found),
+  - whether reply comments are waived (`reply_comments_waived`; else
+    `REPLY_COMMENT_DAYS`=5),
+  - whether the comment period is waived (`comment_period_waived` — valid for an
+    Alternate PD if parties stipulate; flagged as unusual/emergency for a PD).
+  It then computes comment-end, reply-end, the earliest agendizable date, marks
+  each config voting meeting VIABLE/NOT, and flags **TIMELINE RISK** if no
+  scheduled meeting on/before the HSR deadline falls after the window. Dates are
+  calendar-day estimates (Rule 1.15 weekend/holiday roll noted); the PD text and
+  Daily Calendar are authoritative. Never raises — failures degrade to labelled
+  assumptions.
 - **State isolation:** lives under the `proceeding` key and is **preserved across
   meeting resets** (captured in `main()` before `select_target_meeting()` may
   replace the state dict, then re-attached). `reset_state_for()` deliberately

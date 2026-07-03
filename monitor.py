@@ -69,6 +69,20 @@ PROCEEDING_LABEL = "Charter/Cox"
 # Alert when a list entry mentions the proceeding AND at least one of these.
 PROCEEDING_KEYWORDS = ("proposed decision", "alj")
 
+# Procedural-timeline analysis for a Proposed / Alternate Proposed Decision
+# (CPUC Rules of Practice & Procedure, Rule 14.3). The document states its
+# comment period on its face (standard 20 days). Rule nuances:
+#   * ALJ PD comment period: may be REDUCED but not waived (except a genuine
+#     emergency).
+#   * Alternate PD comment period: may be WAIVED if all parties stipulate, or
+#     reduced by the ALJ in certain circumstances.
+#   * Reply comments (5 days after): may be WAIVED entirely on both PD and APD.
+# The item cannot be agendized until both windows fully expire. Relevant because
+# the DOJ Hart-Scott-Rodino antitrust clearance expires on the HSR deadline.
+PROCEEDING_HSR_DEADLINE = "2026-09-15"  # DOJ HSR antitrust clearance expiry
+STANDARD_COMMENT_DAYS = 20              # Rule 14.3 default comment period
+REPLY_COMMENT_DAYS = 5                  # Rule 14.3 reply-comment window
+
 # monitor.log is append-only and committed back to the repo every run, so cap it
 # to the most recent LOG_MAX_LINES lines to keep the repo from bloating over time.
 LOG_MAX_LINES = 5000
@@ -611,7 +625,263 @@ def build_email(kind: str, result: dict, target: dict, detected_at: datetime,
     return subject, body, html_body
 
 
-def build_proceeding_email(matches: list, now: datetime, kind: str = "proposed_decision"):
+_NUM_WORDS = {
+    "five": 5, "seven": 7, "ten": 10, "twelve": 12, "fourteen": 14,
+    "fifteen": 15, "twenty": 20, "twenty-five": 25, "thirty": 30,
+}
+
+
+def _parse_us_date(value):
+    """Parse dates as they appear on CPUC listings ('06/22/2026') / in PD text
+    ('June 22, 2026'). Returns a date or None."""
+    if not value:
+        return None
+    for fmt in ("%m/%d/%Y", "%m/%d/%y", "%B %d, %Y", "%b %d, %Y"):
+        try:
+            return datetime.strptime(value.strip(), fmt).date()
+        except ValueError:
+            continue
+    return None
+
+
+def extract_comment_period_days(pd_text: str):
+    """Best-effort: the comment-period length (in days) stated on the PD's face,
+    plus a short surrounding snippet for human verification. (None, None) if not
+    found. The ALJ may reduce the standard 20 days, so we read it from the doc."""
+    t = re.sub(r"\s+", " ", pd_text).lower()
+    patterns = [
+        r"comment period (?:of |is |shall be |will be )?(?:reduced to )?(\d{1,3}) days",
+        r"(\d{1,3})[- ]day comment period",
+        r"comments?[^.]{0,80}?(?:within|not later than|no later than) (\d{1,3}) days",
+        r"reduced[^.]{0,60}? to (\d{1,3}) days",
+    ]
+    for pat in patterns:
+        mm = re.search(pat, t)
+        if mm:
+            days = int(mm.group(1))
+            if 1 <= days <= 60:
+                s = max(0, mm.start() - 45)
+                e = min(len(t), mm.end() + 25)
+                return days, "..." + t[s:e].strip() + "..."
+    for word, val in _NUM_WORDS.items():
+        if re.search(r"comment period[^.]{0,40}?" + word + r" days", t) or \
+           re.search(word + r"[- ]day comment period", t):
+            return val, f"...{word} day comment period..."
+    return None, None
+
+
+def reply_comments_waived(pd_text: str):
+    """True if the PD/APD waives reply comments, False if it sets a reply window,
+    None if undetermined. Reply comments may be waived on both PDs and APDs."""
+    t = re.sub(r"\s+", " ", pd_text).lower()
+    if re.search(r"reply comments?[^.]{0,30}?waived", t) or \
+       re.search(r"waiv\w+[^.]{0,30}?reply comments?", t) or \
+       re.search(r"no reply comments?", t):
+        return True
+    if re.search(r"reply comments?[^.]{0,60}?(?:within|not later than) \d{1,2} days", t):
+        return False
+    return None
+
+
+def comment_period_waived(pd_text: str):
+    """True if the document waives the (initial) comment period entirely. Only
+    valid for an Alternate PD (all parties stipulate) or a genuine emergency on a
+    PD. 'reply comment' mentions are neutralized first so they don't false-match."""
+    t = re.sub(r"\s+", " ", pd_text).lower().replace("reply comment", "reply_x")
+    return bool(
+        re.search(r"comment period[^.]{0,30}?waived", t)
+        or re.search(r"waiv\w+[^.]{0,40}? comment period", t)
+    )
+
+
+def _fmt_date(d) -> str:
+    return d.strftime("%B %d, %Y").replace(" 0", " ")
+
+
+def build_pd_timeline_blocks(entry: dict, config: dict, now: datetime,
+                             kind: str = "proposed_decision"):
+    """Analyze a Proposed Decision / Alternate PD PDF and return (text_block,
+    html_block) describing the comment/reply windows, which voting meeting is
+    viable, and whether the HSR deadline is at risk. Never raises: on any failure
+    it returns a block stating what couldn't be determined and pointing to the
+    document. Extracted values are labelled 'verify' because the legal text varies.
+
+    Rule nuances handled by kind:
+      * ALJ PD  — comment period can be reduced but NOT waived (except a genuine
+        emergency), so a detected comment waiver is flagged as unusual.
+      * Alternate PD — comment period CAN be waived if all parties stipulate.
+      * Reply comments — can be waived on both.
+    """
+    is_alt = kind == "alternate"
+    doctype = "Alternate Proposed Decision" if is_alt else "Proposed Decision"
+
+    pdf_url = entry.get("pdf_url")
+    parsed_issued = _parse_us_date(entry.get("published_date"))
+    issued = parsed_issued or now.date()
+    issued_assumed = parsed_issued is None
+
+    pd_text = ""
+    try:
+        if pdf_url and pdf_url.startswith("http"):
+            pd_text = fetch_pdf_text(pdf_url)
+    except Exception as exc:
+        log(f"Proceeding {PROCEEDING_ID}: could not read {doctype} PDF for timeline: {exc!r}")
+
+    comment_days, snippet, waived, comment_waived = None, None, None, False
+    if pd_text.strip():
+        comment_days, snippet = extract_comment_period_days(pd_text)
+        waived = reply_comments_waived(pd_text)
+        comment_waived = comment_period_waived(pd_text)
+
+    if comment_waived:
+        comment_days_used = 0
+        if is_alt:
+            comment_note = "WAIVED (all parties stipulated); VERIFY in the document"
+        else:
+            comment_note = (
+                "appears WAIVED — unusual for a PD (allowed only in a genuine "
+                "emergency); VERIFY in the document"
+            )
+    elif comment_days is None:
+        comment_days_used = STANDARD_COMMENT_DAYS
+        comment_note = (
+            f"NOT auto-detected — assuming the {STANDARD_COMMENT_DAYS}-day "
+            f"standard; VERIFY in the document"
+        )
+    else:
+        comment_days_used = comment_days
+        comment_note = "as stated in the document" + (f' ({snippet})' if snippet else "")
+
+    if waived is True:
+        reply_desc = "WAIVED by the ALJ"
+        reply_days_used = 0
+    elif waived is False:
+        reply_desc = f"{REPLY_COMMENT_DAYS} days (applies)"
+        reply_days_used = REPLY_COMMENT_DAYS
+    else:
+        reply_desc = f"{REPLY_COMMENT_DAYS} days (standard — waiver not detected; VERIFY)"
+        reply_days_used = REPLY_COMMENT_DAYS
+
+    comment_end = issued + timedelta(days=comment_days_used)
+    reply_end = comment_end + timedelta(days=reply_days_used)
+
+    hsr = parse_iso_date(PROCEEDING_HSR_DEADLINE)
+    meetings = sorted(parse_iso_date(m["date"]) for m in config.get("meetings", []))
+    viable = next((d for d in meetings if d > reply_end), None)
+    pre_hsr = [d for d in meetings if issued <= d <= hsr]
+
+    # Comment-period display handles the waived (0-day) case cleanly.
+    if comment_days_used == 0:
+        comment_line = f"- Comment period: {comment_note} -> no comment period"
+    else:
+        comment_line = (
+            f"- Comment period: {comment_days_used} days ({comment_note}) "
+            f"-> comments due {_fmt_date(comment_end)}"
+        )
+
+    # ---- plain text ----
+    lines = [
+        "WHAT HAPPENS NEXT (procedural timeline — CPUC Rules of Practice & Procedure):",
+        f"- {doctype} issued: {_fmt_date(issued)}"
+        + (" (assumed = detection date; not found in doc)" if issued_assumed else ""),
+        comment_line,
+        f"- Reply comments: {reply_desc}"
+        + ("" if waived is True else f" -> reply comments due {_fmt_date(reply_end)}"),
+        f"- Earliest the item can be agendized: after {_fmt_date(reply_end)} "
+        f"(both windows must fully expire; no walk-on for this proceeding type)",
+    ]
+    if pre_hsr:
+        lines.append(f"- Voting meetings before the HSR deadline ({_fmt_date(hsr)}):")
+        for d in pre_hsr:
+            ok = d > reply_end
+            lines.append(
+                f"    * {_fmt_date(d)}: "
+                + ("VIABLE" if ok else f"NOT viable (window closes {_fmt_date(reply_end)})")
+            )
+    if viable is None or viable > hsr:
+        lines.append(
+            f"** TIMELINE RISK: no scheduled voting meeting on/before the HSR "
+            f"deadline ({_fmt_date(hsr)}) falls after the comment/reply window. "
+            + (f"Earliest possible meeting is {_fmt_date(viable)}"
+               if viable else "No scheduled meeting qualifies")
+            + " — the transaction may lose HSR clearance before the CPUC can vote. **"
+        )
+    else:
+        lines.append(
+            f"** Earliest viable voting meeting: {_fmt_date(viable)} "
+            f"(before the {_fmt_date(hsr)} HSR deadline). **"
+        )
+    lines.append(
+        "(Dates are calendar-day estimates; a deadline landing on a weekend or "
+        "holiday rolls to the next business day per CPUC Rule 1.15. The PD text "
+        "and CPUC Daily Calendar are authoritative — verify the extracted values.)"
+    )
+    text_block = "\n".join(lines)
+
+    # ---- HTML ----
+    hs = [
+        "<p><b>What happens next</b> (procedural timeline — CPUC Rules of "
+        "Practice &amp; Procedure):</p><ul>",
+        f"<li>{html.escape(doctype)} issued: <b>{html.escape(_fmt_date(issued))}</b>"
+        + (" (assumed = detection date)" if issued_assumed else "") + "</li>",
+        (f"<li>Comment period: <b>{html.escape(comment_note)}</b> &rarr; no "
+         f"comment period</li>"
+         if comment_days_used == 0 else
+         f"<li>Comment period: <b>{comment_days_used} days</b> "
+         f"({html.escape(comment_note)}) &rarr; comments due "
+         f"<b>{html.escape(_fmt_date(comment_end))}</b></li>"),
+        f"<li>Reply comments: <b>{html.escape(reply_desc)}</b>"
+        + ("" if waived is True else
+           f" &rarr; due <b>{html.escape(_fmt_date(reply_end))}</b>") + "</li>",
+        f"<li>Earliest the item can be agendized: <b>after "
+        f"{html.escape(_fmt_date(reply_end))}</b> (both windows must fully "
+        f"expire; no walk-on for this proceeding type)</li>",
+    ]
+    if pre_hsr:
+        hs.append(
+            f"<li>Voting meetings before the HSR deadline "
+            f"({html.escape(_fmt_date(hsr))}):<ul>"
+        )
+        for d in pre_hsr:
+            ok = d > reply_end
+            hs.append(
+                f"<li>{html.escape(_fmt_date(d))}: <b>"
+                + ("VIABLE" if ok else "NOT viable")
+                + "</b>"
+                + ("" if ok else f" (window closes {html.escape(_fmt_date(reply_end))})")
+                + "</li>"
+            )
+        hs.append("</ul></li>")
+    hs.append("</ul>")
+    if viable is None or viable > hsr:
+        hs.append(
+            f'<p style="color:#b00020"><b>⚠ TIMELINE RISK:</b> no scheduled '
+            f"voting meeting on/before the HSR deadline "
+            f"({html.escape(_fmt_date(hsr))}) falls after the comment/reply "
+            f"window. "
+            + (f"Earliest possible meeting is <b>{html.escape(_fmt_date(viable))}</b>"
+               if viable else "No scheduled meeting qualifies")
+            + " — the transaction may lose HSR clearance before the CPUC can vote.</p>"
+        )
+    else:
+        hs.append(
+            f"<p><b>Earliest viable voting meeting: "
+            f"{html.escape(_fmt_date(viable))}</b> (before the "
+            f"{html.escape(_fmt_date(hsr))} HSR deadline).</p>"
+        )
+    hs.append(
+        "<p><i>Dates are calendar-day estimates; a deadline on a weekend or "
+        "holiday rolls to the next business day per CPUC Rule 1.15. The PD text "
+        "and CPUC Daily Calendar are authoritative — verify the extracted "
+        "values.</i></p>"
+    )
+    html_block = "".join(hs)
+
+    return text_block, html_block
+
+
+def build_proceeding_email(matches: list, now: datetime, kind: str = "proposed_decision",
+                           config: dict = None):
     """Return (subject, text_body, html_body) for an A2507016 alert.
 
     kind="proposed_decision" → the ALJ's Proposed Decision.
@@ -676,6 +946,12 @@ def build_proceeding_email(matches: list, now: datetime, kind: str = "proposed_d
             f"<b>Date posted:</b> {html.escape(str(posted))}<br>"
             f"<b>PDF link:</b> {_pdf_html(pdf)}</p>"
         )
+        # Procedural timeline (comment/reply windows -> viable voting meeting vs
+        # the HSR deadline). Applies to both the ALJ PD and an Alternate PD.
+        if config is not None:
+            t_text, t_html = build_pd_timeline_blocks(m, config, now, kind=kind)
+            parts.append(t_text)
+            doc_html += t_html
     parts.append(
         f"Detected at:    {detected_str} (Pacific time)\n"
         f"Source:         {PROPOSED_DECISIONS_URL}\n"
@@ -900,7 +1176,7 @@ def run_proceeding_watch(state, config, now) -> None:
     labels = {"alternate": "Alternate Proposed Decision", "proposed_decision": "Proposed Decision"}
     sent_any = False
     for kind, entries in by_kind.items():
-        subject, body, html_body = build_proceeding_email(entries, now, kind=kind)
+        subject, body, html_body = build_proceeding_email(entries, now, kind=kind, config=config)
         try:
             send_email(subject, body, config, html_body=html_body)
         except Exception as exc:
@@ -1095,6 +1371,7 @@ def main() -> int:
                 subject, body, html_body = build_proceeding_email(
                     sample_matches, now,
                     kind="alternate" if is_alt else "proposed_decision",
+                    config=config,
                 )
             else:
                 log(
