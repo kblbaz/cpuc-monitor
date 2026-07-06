@@ -210,3 +210,6 @@
 [2026-07-06 05:31:55 PDT] Agenda: does not match target 2026-07-16 (Agenda #3584) yet.
 [2026-07-06 05:31:55 PDT] Hold List: skipped (agenda not yet confirmed).
 [2026-07-06 05:31:55 PDT] Run complete.
+[2026-07-06 11:34:51 PDT] SEND_UPDATE set — sending the update announcement and exiting.
+[2026-07-06 11:34:52 PDT] Email: sent via Brevo to 1 recipient(s).
+[2026-07-06 11:34:52 PDT] Update email sent successfully.
