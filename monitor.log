@@ -234,3 +234,15 @@
 [2026-07-07 03:40:44 PDT] Agenda: not due yet (9 days out, interval 1 day, 0:00:00, pre-PD — daily). Last checked 2026-07-06T05:31:44.560472-07:00.
 [2026-07-07 03:40:44 PDT] Hold List: skipped (agenda not yet confirmed).
 [2026-07-07 03:40:44 PDT] Run complete.
+[2026-07-07 11:24:49 PDT] Proceeding A2507016: checking Proposed Decisions list.
+[2026-07-07 11:24:55 PDT] Proceeding A2507016: 20 PD list entries, 0 match the proceeding.
+[2026-07-07 11:24:55 PDT] Run start: target meeting 2026-07-16 (Agenda #3584), 9 days out.
+[2026-07-07 11:24:55 PDT] Agenda: checking (9 days out, interval 1 day, 0:00:00, pre-PD — daily).
+[2026-07-07 11:25:05 PDT] Agenda: latest is 'Current Meeting Agenda for July 16, 2026 (Agenda #3584)'.
+[2026-07-07 11:25:07 PDT] Agenda: A2507016 not on this agenda.
+[2026-07-07 11:25:07 PDT] Email: sent via Brevo to 4 recipient(s).
+[2026-07-07 11:25:07 PDT] Agenda: CONFIRMED and alert sent. PDF: https://docs.cpuc.ca.gov/PublishedDocs/Published/G000/M610/K353/610353676.pdf
+[2026-07-07 11:25:07 PDT] Hold List: checking (9 days out, interval 3:00:00).
+[2026-07-07 11:25:18 PDT] Hold List: latest is 'Hold List for July 2, 2026 (Agenda 3583) (Final).docx'.
+[2026-07-07 11:25:18 PDT] Hold List: does not match target 2026-07-16 (Agenda #3584) yet.
+[2026-07-07 11:25:18 PDT] Run complete.
