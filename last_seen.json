@@ -13,13 +13,19 @@
     "confirmed": false,
     "pdf_url": null,
     "detected_at": null,
-    "last_checked": "2026-07-09T10:32:17.228152-07:00"
+    "last_checked": "2026-07-09T15:45:44.777022-07:00"
   },
   "proceeding": {
     "id": "A2507016",
-    "last_checked": "2026-07-09T10:32:17.228152-07:00",
-    "detected_at": null,
-    "agenda_eligible_date": null,
-    "seen": []
+    "last_checked": "2026-07-09T15:45:44.777022-07:00",
+    "detected_at": "2026-07-09T15:45:44.777022-07:00",
+    "agenda_eligible_date": "2026-08-03",
+    "seen": [
+      "https://docs.cpuc.ca.gov/PublishedDocs/Efile/G000/M610/K354/610354166.PDF",
+      "https://docs.cpuc.ca.gov/PublishedDocs/Efile/G000/M610/K355/610355474.PDF",
+      "https://docs.cpuc.ca.gov/PublishedDocs/Efile/G000/M610/K353/610353941.PDF",
+      "https://docs.cpuc.ca.gov/PublishedDocs/Efile/G000/M610/K353/610353839.PDF",
+      "https://docs.cpuc.ca.gov/PublishedDocs/Efile/G000/M610/K354/610354704.PDF"
+    ]
   }
 }

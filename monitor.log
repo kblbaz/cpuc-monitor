@@ -295,3 +295,13 @@
 [2026-07-09 10:32:30 PDT] Hold List: latest is 'Hold List for July 2, 2026 (Agenda 3583) (Final).docx'.
 [2026-07-09 10:32:30 PDT] Hold List: does not match target 2026-07-16 (Agenda #3584) yet.
 [2026-07-09 10:32:30 PDT] Run complete.
+[2026-07-09 15:45:44 PDT] Proceeding A2507016: checking Proposed Decisions list.
+[2026-07-09 15:45:46 PDT] Proceeding A2507016: 20 PD list entries, 5 match the proceeding.
+[2026-07-09 15:46:10 PDT] Email: sent via Brevo to 4 recipient(s).
+[2026-07-09 15:46:10 PDT] Proceeding A2507016: agenda-eligibility date set to 2026-08-03 (agenda cadence stays daily until then).
+[2026-07-09 15:46:10 PDT] Proceeding A2507016: ALERT sent for 5 new Proposed Decision(s).
+[2026-07-09 15:46:10 PDT] Run start: target meeting 2026-07-16 (Agenda #3584), 7 days out.
+[2026-07-09 15:46:10 PDT] Hold List: checking (7 days out, interval 3:00:00).
+[2026-07-09 15:46:25 PDT] Hold List: latest is 'Hold List for July 2, 2026 (Agenda 3583) (Final).docx'.
+[2026-07-09 15:46:25 PDT] Hold List: does not match target 2026-07-16 (Agenda #3584) yet.
+[2026-07-09 15:46:25 PDT] Run complete.
