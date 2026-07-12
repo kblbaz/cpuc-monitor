@@ -373,3 +373,11 @@
 [2026-07-11 16:37:17 PDT] Hold List: latest is 'Hold List for July 2, 2026 (Agenda 3583) (Final).docx'.
 [2026-07-11 16:37:17 PDT] Hold List: does not match target 2026-07-16 (Agenda #3584) yet.
 [2026-07-11 16:37:17 PDT] Run complete.
+[2026-07-12 00:47:58 PDT] Proceeding A2507016: checking Proposed Decisions list.
+[2026-07-12 00:48:00 PDT] Proceeding A2507016: 20 PD list entries, 4 match the proceeding.
+[2026-07-12 00:48:00 PDT] Proceeding A2507016: match(es) already alerted — nothing new.
+[2026-07-12 00:48:00 PDT] Run start: target meeting 2026-07-16 (Agenda #3584), 4 days out.
+[2026-07-12 00:48:00 PDT] Hold List: checking (4 days out, interval 3:00:00).
+[2026-07-12 00:48:17 PDT] Hold List: latest is 'Hold List for July 2, 2026 (Agenda 3583) (Final).docx'.
+[2026-07-12 00:48:17 PDT] Hold List: does not match target 2026-07-16 (Agenda #3584) yet.
+[2026-07-12 00:48:17 PDT] Run complete.
