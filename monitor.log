@@ -441,3 +441,12 @@
 [2026-07-13 14:30:54 PDT] Hold List: latest is 'Hold List for July 2, 2026 (Agenda 3583) (Final).docx'.
 [2026-07-13 14:30:54 PDT] Hold List: does not match target 2026-07-16 (Agenda #3584) yet.
 [2026-07-13 14:30:54 PDT] Run complete.
+[2026-07-13 22:58:10 PDT] Proceeding A2507016: checking Proposed Decisions list.
+[2026-07-13 22:58:11 PDT] Proceeding A2507016: 20 PD list entries, 3 match the proceeding.
+[2026-07-13 22:58:11 PDT] Proceeding A2507016: match(es) already alerted — nothing new.
+[2026-07-13 22:58:11 PDT] Run start: target meeting 2026-07-16 (Agenda #3584), 3 days out.
+[2026-07-13 22:58:11 PDT] Hold List: checking (3 days out, interval 1:00:00).
+[2026-07-13 22:58:22 PDT] Hold List: latest is 'Hold List for July 16, 2026 (Agenda 3584).docx'.
+[2026-07-13 22:58:23 PDT] Email: sent via Brevo to 4 recipient(s).
+[2026-07-13 22:58:23 PDT] Hold List: CONFIRMED and alert sent. PDF: https://docs.cpuc.ca.gov/PublishedDocs/Published/G000/M611/K134/611134881.PDF
+[2026-07-13 22:58:23 PDT] Run complete.
