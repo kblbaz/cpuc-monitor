@@ -660,3 +660,6 @@
 [2026-07-21 05:16:02 PDT] Proceeding A2507016: 20 PD list entries, 0 match the proceeding.
 [2026-07-21 05:16:02 PDT] Run start: target meeting 2026-08-13 (Agenda #3585), 23 days out.
 [2026-07-21 05:16:02 PDT] More than 20 days before meeting — no meeting checks performed.
+[2026-07-21 07:25:38 PDT] Proceeding A2507016: not due yet (interval 3:00:00). Last checked 2026-07-21T05:15:56.975444-07:00.
+[2026-07-21 07:25:38 PDT] Run start: target meeting 2026-08-13 (Agenda #3585), 23 days out.
+[2026-07-21 07:25:38 PDT] More than 20 days before meeting — no meeting checks performed.
