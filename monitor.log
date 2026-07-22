@@ -687,3 +687,6 @@
 [2026-07-21 16:26:29 PDT] Proceeding A2507016: fetch error: HTTPError('500 Server Error: Internal Server Error for url: https://docs.cpuc.ca.gov/SearchRes.aspx?ProposedDecisions=1&DaySearch=30')
 [2026-07-21 16:26:29 PDT] Run start: target meeting 2026-08-13 (Agenda #3585), 23 days out.
 [2026-07-21 16:26:29 PDT] More than 20 days before meeting — no meeting checks performed.
+[2026-07-21 17:55:01 PDT] Proceeding A2507016: not due yet (interval 3:00:00). Last checked 2026-07-21T16:26:29.606878-07:00.
+[2026-07-21 17:55:01 PDT] Run start: target meeting 2026-08-13 (Agenda #3585), 23 days out.
+[2026-07-21 17:55:01 PDT] More than 20 days before meeting — no meeting checks performed.
