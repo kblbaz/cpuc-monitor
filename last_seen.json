@@ -7,7 +7,7 @@
     "confirmed": false,
     "pdf_url": null,
     "detected_at": null,
-    "last_checked": null
+    "last_checked": "2026-07-24T01:42:47.063034-07:00"
   },
   "hold_list": {
     "confirmed": false,
@@ -17,7 +17,7 @@
   },
   "proceeding": {
     "id": "A2507016",
-    "last_checked": "2026-07-23T20:42:46.888757-07:00",
+    "last_checked": "2026-07-24T01:42:47.063034-07:00",
     "detected_at": "2026-07-09T15:45:44.777022-07:00",
     "agenda_eligible_date": "2026-08-03",
     "seen": [
