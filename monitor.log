@@ -844,3 +844,9 @@
 [2026-07-24 14:15:30 PDT] Agenda: not due yet (20 days out, interval 1 day, 0:00:00, A2507016 windows open until 2026-08-03 — daily). Last checked 2026-07-24T01:42:47.063034-07:00.
 [2026-07-24 14:15:30 PDT] Hold List: skipped (agenda not yet confirmed).
 [2026-07-24 14:15:30 PDT] Run complete.
+[2026-07-24 15:28:30 PDT] Proceeding A2507016: checking Proposed Decisions list.
+[2026-07-24 15:28:35 PDT] Proceeding A2507016: fetch error: HTTPError('500 Server Error: Internal Server Error for url: https://docs.cpuc.ca.gov/SearchRes.aspx?ProposedDecisions=1&DaySearch=30')
+[2026-07-24 15:28:35 PDT] Run start: target meeting 2026-08-13 (Agenda #3585), 20 days out.
+[2026-07-24 15:28:35 PDT] Agenda: not due yet (20 days out, interval 1 day, 0:00:00, A2507016 windows open until 2026-08-03 — daily). Last checked 2026-07-24T01:42:47.063034-07:00.
+[2026-07-24 15:28:35 PDT] Hold List: skipped (agenda not yet confirmed).
+[2026-07-24 15:28:35 PDT] Run complete.
