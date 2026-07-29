@@ -1204,3 +1204,11 @@
 [2026-07-29 05:04:52 PDT] Agenda: not due yet (15 days out, interval 1 day, 0:00:00, A2507016 windows open until 2026-08-03 — daily). Last checked 2026-07-28T05:59:20.571354-07:00.
 [2026-07-29 05:04:52 PDT] Hold List: skipped (agenda not yet confirmed).
 [2026-07-29 05:04:52 PDT] Run complete.
+[2026-07-29 07:27:51 PDT] Proceeding A2507016: checking Proposed Decisions list.
+[2026-07-29 07:27:57 PDT] Proceeding A2507016: 20 PD list entries, 0 match the proceeding.
+[2026-07-29 07:27:57 PDT] Run start: target meeting 2026-08-13 (Agenda #3585), 15 days out.
+[2026-07-29 07:27:57 PDT] Agenda: checking (15 days out, interval 1 day, 0:00:00, A2507016 windows open until 2026-08-03 — daily).
+[2026-07-29 07:28:09 PDT] Agenda: latest is 'Current Meeting Agenda for July 16, 2026 (Agenda #3584 - #5)'.
+[2026-07-29 07:28:09 PDT] Agenda: does not match target 2026-08-13 (Agenda #3585) yet.
+[2026-07-29 07:28:09 PDT] Hold List: skipped (agenda not yet confirmed).
+[2026-07-29 07:28:09 PDT] Run complete.
