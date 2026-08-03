@@ -4,16 +4,16 @@
     "agenda_number": "3585"
   },
   "agenda": {
-    "confirmed": false,
-    "pdf_url": null,
-    "detected_at": null,
-    "last_checked": "2026-08-03T14:14:03.348561-07:00"
+    "confirmed": true,
+    "pdf_url": "https://docs.cpuc.ca.gov/PublishedDocs/Published/G000/M613/K284/613284278.pdf",
+    "detected_at": "2026-08-03T15:17:54.632153-07:00",
+    "last_checked": "2026-08-03T15:17:54.632153-07:00"
   },
   "hold_list": {
     "confirmed": false,
     "pdf_url": null,
     "detected_at": null,
-    "last_checked": null
+    "last_checked": "2026-08-03T15:17:54.632153-07:00"
   },
   "proceeding": {
     "id": "A2507016",
