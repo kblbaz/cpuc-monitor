@@ -1786,3 +1786,9 @@
 [2026-08-05 11:44:35 PDT] Run start: target meeting 2026-08-13 (Agenda #3585), 8 days out.
 [2026-08-05 11:44:35 PDT] Hold List: not due yet (8 days out, interval 3:00:00). Last checked 2026-08-05T10:06:22.194027-07:00.
 [2026-08-05 11:44:35 PDT] Run complete.
+[2026-08-05 13:15:13 PDT] Proceeding A2507016: checking Proposed Decisions list.
+[2026-08-05 13:15:24 PDT] Proceeding A2507016: 20 PD list entries, 0 match the proceeding.
+[2026-08-05 13:15:24 PDT] Run start: target meeting 2026-08-13 (Agenda #3585), 8 days out.
+[2026-08-05 13:15:24 PDT] Hold List: checking (8 days out, interval 3:00:00).
+[2026-08-05 13:15:58 PDT] Hold List: fetch error: ReadTimeout(ReadTimeoutError("HTTPSConnectionPool(host='docs.cpuc.ca.gov', port=443): Read timed out. (read timeout=30)"))
+[2026-08-05 13:15:58 PDT] Run complete.
