@@ -13,11 +13,11 @@
     "confirmed": false,
     "pdf_url": null,
     "detected_at": null,
-    "last_checked": "2026-08-08T12:57:28.088912-07:00"
+    "last_checked": "2026-08-08T16:25:15.730654-07:00"
   },
   "proceeding": {
     "id": "A2507016",
-    "last_checked": "2026-08-08T12:57:28.088912-07:00",
+    "last_checked": "2026-08-08T16:25:15.730654-07:00",
     "detected_at": "2026-07-09T15:45:44.777022-07:00",
     "agenda_eligible_date": "2026-08-03",
     "seen": [
