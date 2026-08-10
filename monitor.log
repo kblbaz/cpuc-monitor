@@ -2411,3 +2411,8 @@
 [2026-08-10 16:25:47 PDT] Email: sent via Brevo to 4 recipient(s).
 [2026-08-10 16:25:47 PDT] Hold List: CONFIRMED and alert sent. PDF: https://docs.cpuc.ca.gov/PublishedDocs/Published/G000/M614/K464/614464499.PDF
 [2026-08-10 16:25:47 PDT] Run complete.
+[2026-08-10 16:58:44 PDT] Proceeding A2507016: checking Proposed Decisions list.
+[2026-08-10 16:58:46 PDT] Proceeding A2507016: 20 PD list entries, 0 match the proceeding.
+[2026-08-10 16:58:46 PDT] Run start: target meeting 2026-08-13 (Agenda #3585), 3 days out.
+[2026-08-10 16:58:46 PDT] Hold List: already confirmed for this meeting. Nothing to do.
+[2026-08-10 16:58:46 PDT] Run complete.
