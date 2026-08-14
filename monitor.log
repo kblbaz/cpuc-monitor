@@ -2716,3 +2716,8 @@
 [2026-08-13 21:25:25 PDT] Run start: target meeting 2026-08-13 (Agenda #3585), 0 days out.
 [2026-08-13 21:25:25 PDT] Hold List: already confirmed for this meeting. Nothing to do.
 [2026-08-13 21:25:25 PDT] Run complete.
+[2026-08-13 22:52:30 PDT] Proceeding A2507016: checking Proposed Decisions list.
+[2026-08-13 22:52:31 PDT] Proceeding A2507016: fetch error: HTTPError('500 Server Error: Internal Server Error for url: https://docs.cpuc.ca.gov/SearchRes.aspx?ProposedDecisions=1&DaySearch=30')
+[2026-08-13 22:52:31 PDT] Run start: target meeting 2026-08-13 (Agenda #3585), 0 days out.
+[2026-08-13 22:52:31 PDT] Hold List: already confirmed for this meeting. Nothing to do.
+[2026-08-13 22:52:31 PDT] Run complete.
