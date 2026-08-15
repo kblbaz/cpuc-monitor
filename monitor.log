@@ -2996,3 +2996,10 @@
 [2026-08-15 01:38:49 PDT] Agenda: does not match target 2026-09-03 (Agenda #3586) yet.
 [2026-08-15 01:38:49 PDT] Hold List: skipped (agenda not yet confirmed).
 [2026-08-15 01:38:49 PDT] Run complete.
+[2026-08-15 02:02:02 PDT] Proceeding A2507016: checking Proposed Decisions list.
+[2026-08-15 02:02:08 PDT] Proceeding A2507016: 20 PD list entries, 0 match the proceeding.
+[2026-08-15 02:02:08 PDT] Run start: target meeting 2026-09-03 (Agenda #3586), 19 days out.
+[2026-08-15 02:02:08 PDT] Agenda: checking (19 days out, interval 0:15:00, A2507016 agenda-eligible — frequent).
+[2026-08-15 02:02:39 PDT] Agenda: fetch error: ReadTimeout(ReadTimeoutError("HTTPSConnectionPool(host='docs.cpuc.ca.gov', port=443): Read timed out. (read timeout=30)"))
+[2026-08-15 02:02:39 PDT] Hold List: skipped (agenda not yet confirmed).
+[2026-08-15 02:02:39 PDT] Run complete.
