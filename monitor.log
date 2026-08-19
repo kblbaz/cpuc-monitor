@@ -4378,3 +4378,9 @@
 [2026-08-18 23:55:25 PDT] Agenda: does not match target 2026-09-03 (Agenda #3586) yet.
 [2026-08-18 23:55:25 PDT] Hold List: skipped (agenda not yet confirmed).
 [2026-08-18 23:55:25 PDT] Run complete.
+[2026-08-19 00:30:53 PDT] Proceeding A2507016: not due yet (interval 3:00:00). Last checked 2026-08-18T23:54:53.565518-07:00.
+[2026-08-19 00:30:53 PDT] Run start: target meeting 2026-09-03 (Agenda #3586), 15 days out.
+[2026-08-19 00:30:53 PDT] Agenda: checking (15 days out, interval 0:15:00, A2507016 agenda-eligible — frequent).
+[2026-08-19 00:30:53 PDT] Agenda: fetch error: HTTPError('500 Server Error: Internal Server Error for url: https://docs.cpuc.ca.gov/SearchRes.aspx?DocTypeID=1&DocTitleStart=Current%20Meeting%20Agenda&Latest=1')
+[2026-08-19 00:30:53 PDT] Hold List: skipped (agenda not yet confirmed).
+[2026-08-19 00:30:53 PDT] Run complete.
