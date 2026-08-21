@@ -1,10 +1,3 @@
-[2026-07-03 08:45:15 PDT] Run start: target meeting 2026-07-16 (Agenda #3584), 13 days out.
-[2026-07-03 08:45:15 PDT] Agenda: not due yet (13 days out, interval 1 day, 0:00:00, pre-PD — daily). Last checked 2026-07-02T15:36:17.189094-07:00.
-[2026-07-03 08:45:15 PDT] Hold List: skipped (agenda not yet confirmed).
-[2026-07-03 08:45:15 PDT] Run complete.
-[2026-07-03 13:21:13 PDT] Proceeding A2507016: checking Proposed Decisions list.
-[2026-07-03 13:21:18 PDT] Proceeding A2507016: 20 PD list entries, 0 match the proceeding.
-[2026-07-03 13:21:18 PDT] Run start: target meeting 2026-07-16 (Agenda #3584), 13 days out.
 [2026-07-03 13:21:18 PDT] Agenda: not due yet (13 days out, interval 1 day, 0:00:00, pre-PD — daily). Last checked 2026-07-02T15:36:17.189094-07:00.
 [2026-07-03 13:21:18 PDT] Hold List: skipped (agenda not yet confirmed).
 [2026-07-03 13:21:18 PDT] Run complete.
@@ -5005,3 +4998,10 @@
 [2026-08-21 12:39:15 PDT] Agenda: does not match target 2026-09-03 (Agenda #3586) yet.
 [2026-08-21 12:39:15 PDT] Hold List: skipped (agenda not yet confirmed).
 [2026-08-21 12:39:15 PDT] Run complete.
+[2026-08-21 12:54:35 PDT] Proceeding A2507016: not due yet (interval 3:00:00). Last checked 2026-08-21T11:00:39.495128-07:00.
+[2026-08-21 12:54:35 PDT] Run start: target meeting 2026-09-03 (Agenda #3586), 13 days out.
+[2026-08-21 12:54:35 PDT] Agenda: checking (13 days out, interval 0:15:00, A2507016 agenda-eligible — frequent).
+[2026-08-21 12:54:46 PDT] Agenda: latest is 'Current Meeting Agenda for August 13, 2026 (Agenda #3585 - #6)'.
+[2026-08-21 12:54:46 PDT] Agenda: does not match target 2026-09-03 (Agenda #3586) yet.
+[2026-08-21 12:54:46 PDT] Hold List: skipped (agenda not yet confirmed).
+[2026-08-21 12:54:46 PDT] Run complete.
