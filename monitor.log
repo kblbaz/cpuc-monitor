@@ -1,10 +1,3 @@
-[2026-07-07 11:25:07 PDT] Agenda: CONFIRMED and alert sent. PDF: https://docs.cpuc.ca.gov/PublishedDocs/Published/G000/M610/K353/610353676.pdf
-[2026-07-07 11:25:07 PDT] Hold List: checking (9 days out, interval 3:00:00).
-[2026-07-07 11:25:18 PDT] Hold List: latest is 'Hold List for July 2, 2026 (Agenda 3583) (Final).docx'.
-[2026-07-07 11:25:18 PDT] Hold List: does not match target 2026-07-16 (Agenda #3584) yet.
-[2026-07-07 11:25:18 PDT] Run complete.
-[2026-07-07 15:37:11 PDT] Proceeding A2507016: checking Proposed Decisions list.
-[2026-07-07 15:37:16 PDT] Proceeding A2507016: 20 PD list entries, 0 match the proceeding.
 [2026-07-07 15:37:16 PDT] Run start: target meeting 2026-07-16 (Agenda #3584), 9 days out.
 [2026-07-07 15:37:16 PDT] Hold List: checking (9 days out, interval 3:00:00).
 [2026-07-07 15:37:31 PDT] Hold List: latest is 'Hold List for July 2, 2026 (Agenda 3583) (Final).docx'.
@@ -5005,3 +4998,11 @@
 [2026-08-21 21:00:23 PDT] Agenda: does not match target 2026-09-03 (Agenda #3586) yet.
 [2026-08-21 21:00:23 PDT] Hold List: skipped (agenda not yet confirmed).
 [2026-08-21 21:00:23 PDT] Run complete.
+[2026-08-21 21:39:03 PDT] Proceeding A2507016: checking Proposed Decisions list.
+[2026-08-21 21:39:07 PDT] Proceeding A2507016: 20 PD list entries, 0 match the proceeding.
+[2026-08-21 21:39:07 PDT] Run start: target meeting 2026-09-03 (Agenda #3586), 13 days out.
+[2026-08-21 21:39:07 PDT] Agenda: checking (13 days out, interval 0:15:00, A2507016 agenda-eligible — frequent).
+[2026-08-21 21:39:19 PDT] Agenda: latest is 'Current Meeting Agenda for August 13, 2026 (Agenda #3585 - #6)'.
+[2026-08-21 21:39:19 PDT] Agenda: does not match target 2026-09-03 (Agenda #3586) yet.
+[2026-08-21 21:39:19 PDT] Hold List: skipped (agenda not yet confirmed).
+[2026-08-21 21:39:19 PDT] Run complete.
