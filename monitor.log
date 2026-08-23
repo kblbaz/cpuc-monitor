@@ -1,9 +1,3 @@
-[2026-07-24 13:03:30 PDT] Run start: target meeting 2026-08-13 (Agenda #3585), 20 days out.
-[2026-07-24 13:03:30 PDT] Agenda: not due yet (20 days out, interval 1 day, 0:00:00, A2507016 windows open until 2026-08-03 — daily). Last checked 2026-07-24T01:42:47.063034-07:00.
-[2026-07-24 13:03:30 PDT] Hold List: skipped (agenda not yet confirmed).
-[2026-07-24 13:03:30 PDT] Run complete.
-[2026-07-24 14:15:30 PDT] Proceeding A2507016: not due yet (interval 3:00:00). Last checked 2026-07-24T11:45:05.155006-07:00.
-[2026-07-24 14:15:30 PDT] Run start: target meeting 2026-08-13 (Agenda #3585), 20 days out.
 [2026-07-24 14:15:30 PDT] Agenda: not due yet (20 days out, interval 1 day, 0:00:00, A2507016 windows open until 2026-08-03 — daily). Last checked 2026-07-24T01:42:47.063034-07:00.
 [2026-07-24 14:15:30 PDT] Hold List: skipped (agenda not yet confirmed).
 [2026-07-24 14:15:30 PDT] Run complete.
@@ -5004,3 +4998,8 @@
 [2026-08-23 10:42:02 PDT] Agenda: fetch error: HTTPError('500 Server Error: Internal Server Error for url: https://docs.cpuc.ca.gov/SearchRes.aspx?DocTypeID=1&DocTitleStart=Current%20Meeting%20Agenda&Latest=1')
 [2026-08-23 10:42:02 PDT] Hold List: skipped (agenda not yet confirmed).
 [2026-08-23 10:42:02 PDT] Run complete.
+[2026-08-23 10:56:12 PDT] Proceeding A2507016: not due yet (interval 3:00:00). Last checked 2026-08-23T09:40:43.921151-07:00.
+[2026-08-23 10:56:12 PDT] Run start: target meeting 2026-09-03 (Agenda #3586), 11 days out.
+[2026-08-23 10:56:12 PDT] Agenda: not due yet (11 days out, interval 0:15:00, A2507016 agenda-eligible — frequent). Last checked 2026-08-23T10:42:00.269203-07:00.
+[2026-08-23 10:56:12 PDT] Hold List: skipped (agenda not yet confirmed).
+[2026-08-23 10:56:12 PDT] Run complete.
