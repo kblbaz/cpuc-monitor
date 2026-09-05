@@ -1,6 +1,3 @@
-[2026-08-05 08:35:40 PDT] Proceeding A2507016: not due yet (interval 3:00:00). Last checked 2026-08-05T06:24:23.600413-07:00.
-[2026-08-05 08:35:40 PDT] Run start: target meeting 2026-08-13 (Agenda #3585), 8 days out.
-[2026-08-05 08:35:40 PDT] Hold List: not due yet (8 days out, interval 3:00:00). Last checked 2026-08-05T06:24:23.600413-07:00.
 [2026-08-05 08:35:40 PDT] Run complete.
 [2026-08-05 10:06:22 PDT] Proceeding A2507016: checking Proposed Decisions list.
 [2026-08-05 10:06:30 PDT] Proceeding A2507016: 20 PD list entries, 0 match the proceeding.
@@ -5001,3 +4998,6 @@
 [2026-09-04 21:58:58 PDT] Proceeding A2507016: checking Proposed Decisions list.
 [2026-09-04 21:59:02 PDT] Proceeding A2507016: 20 PD list entries, 0 match the proceeding.
 [2026-09-04 21:59:02 PDT] No upcoming meetings in config.json. Meeting cycle idle.
+[2026-09-05 01:52:03 PDT] Proceeding A2507016: checking Proposed Decisions list.
+[2026-09-05 01:52:04 PDT] Proceeding A2507016: 20 PD list entries, 0 match the proceeding.
+[2026-09-05 01:52:04 PDT] No upcoming meetings in config.json. Meeting cycle idle.
