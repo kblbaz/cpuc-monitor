@@ -1,6 +1,3 @@
-[2026-08-13 17:03:10 PDT] Hold List: already confirmed for this meeting. Nothing to do.
-[2026-08-13 17:03:10 PDT] Run complete.
-[2026-08-13 19:36:30 PDT] Proceeding A2507016: checking Proposed Decisions list.
 [2026-08-13 19:36:35 PDT] Proceeding A2507016: 20 PD list entries, 0 match the proceeding.
 [2026-08-13 19:36:35 PDT] Run start: target meeting 2026-08-13 (Agenda #3585), 0 days out.
 [2026-08-13 19:36:35 PDT] Hold List: already confirmed for this meeting. Nothing to do.
@@ -5001,3 +4998,6 @@
 [2026-10-30 05:40:46 PDT] Proceeding A2507016: checking Proposed Decisions list.
 [2026-10-30 05:40:47 PDT] Proceeding A2507016: 20 PD list entries, 0 match the proceeding.
 [2026-10-30 05:40:47 PDT] No upcoming meetings in config.json. Meeting cycle idle.
+[2026-10-30 11:12:08 PDT] Proceeding A2507016: checking Proposed Decisions list.
+[2026-10-30 11:12:11 PDT] Proceeding A2507016: fetch error: HTTPError('500 Server Error: Internal Server Error for url: https://docs.cpuc.ca.gov/SearchRes.aspx?ProposedDecisions=1&DaySearch=30')
+[2026-10-30 11:12:11 PDT] No upcoming meetings in config.json. Meeting cycle idle.
