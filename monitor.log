@@ -1,5 +1,3 @@
-[2026-08-14 13:17:49 PDT] Agenda: latest is 'Current Meeting Agenda for August 13, 2026 (Agenda #3585 - #6)'.
-[2026-08-14 13:17:49 PDT] Agenda: does not match target 2026-09-03 (Agenda #3586) yet.
 [2026-08-14 13:17:49 PDT] Hold List: skipped (agenda not yet confirmed).
 [2026-08-14 13:17:49 PDT] Run complete.
 [2026-08-14 13:48:36 PDT] Proceeding A2507016: not due yet (interval 3:00:00). Last checked 2026-08-14T13:17:30.646827-07:00.
@@ -5000,3 +4998,7 @@
 [2026-11-07 15:47:01 PST] No upcoming meetings in config.json. Meeting cycle idle.
 [2026-11-07 18:44:24 PST] Proceeding A2507016: not due yet (interval 3:00:00). Last checked 2026-11-07T15:46:58.548892-08:00.
 [2026-11-07 18:44:24 PST] No upcoming meetings in config.json. Meeting cycle idle.
+[2026-11-08 01:30:43 PST] Proceeding A2507016: checking Proposed Decisions list.
+[2026-11-08 01:30:44 PST] Proceeding A2507016: 20 PD list entries, 2 match the proceeding.
+[2026-11-08 01:30:48 PST] Proceeding A2507016: Proposed Decision found but email failed: RuntimeError('Brevo rejected the send (HTTP 401): {"message":"Key not found","code":"unauthorized"}\n'). Will retry next run.
+[2026-11-08 01:30:48 PST] No upcoming meetings in config.json. Meeting cycle idle.
